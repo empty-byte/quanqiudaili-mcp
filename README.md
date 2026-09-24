@@ -2,7 +2,7 @@
 
 全球代理（quanqiudaili.com）对外 API 的 MCP 服务器。让 Claude Code、Claude Desktop 等 MCP 客户端可以查询子账号、库存、价格，并在你确认后下单、续费、改配置。
 
-默认暴露全部 33 个工具，含下单扣费、续费、删除子账号；加 `--readonly` 只暴露 19 个只读工具，装了不会产生任何费用。删除与扣费工具都带 `destructiveHint` 标注；支持该标注的客户端会在调用前要求确认，不支持的客户端不会，所以给不需要写操作的人配 `--readonly`。
+默认暴露全部 33 个工具，含下单扣费、续费、删除子账号；加 `--readonly` 只暴露 19 个只读工具，装了不会产生任何费用。新建、修改、下单、续费、删除这 14 个写操作执行前都会先向你确认（见下文"写操作确认"），AI 替不了你点；不需要写操作的人直接配 `--readonly`。
 
 业务逻辑、参数校验、鉴权、扣费全部在后端完成，本项目只是一个 HTTP 客户端。
 
@@ -18,7 +18,7 @@ cd quanqiudaili-mcp
 npm ci
 ```
 
-`npm ci` 结束时会自动编译到 `dist/`。启动命令是 `node <安装目录>/dist/src/index.js`，只读加 `--readonly`；也可以 `npm install -g .` 得到全局命令 `quanqiudaili-mcp`。
+`npm ci` 结束时会自动编译到 `dist/`。启动命令是 `node <安装目录>/dist/src/index.js`，只读加 `--readonly`，自动化脚本加 `--yes` 跳过写操作确认；也可以 `npm install -g .` 得到全局命令 `quanqiudaili-mcp`。
 
 ## 获取 token
 
@@ -80,6 +80,15 @@ Claude Desktop 的 `claude_desktop_config.json`：
 
 注意：服务是被客户端当子进程拉起的，只继承一小份白名单环境变量，你在终端里 `export` 或 `$env:` 设置的 `QQDL_TOKEN` 传不进去，token 必须像上面那样写在客户端配置里。
 
+## 写操作确认
+
+新建、修改、下单、续费、升级、退单、删除这 14 个工具执行前都会先向你确认：
+
+- 客户端支持 MCP 的弹窗确认（elicitation）时，会弹出操作预览（工具、参数、产品名），你点确认后才请求后端，拒绝或关掉则什么都不发生。Inspector、VS Code 支持；其它客户端以实际是否弹窗为准。
+- 客户端不支持时，第一次调用只返回预览和一个 5 分钟有效、只能用一次的确认码，AI 要把预览告诉你，你同意后它再带确认码用同样参数调一次。这一路靠 AI 转述，弱于弹窗。
+- 这层确认与客户端自带的工具权限弹窗是叠加的，可能问两次。
+- 自动化脚本不想被打断，启动参数加 `--yes`，写操作直接执行。`--readonly` 模式没有写工具，不涉及确认。
+
 ## 调试
 
 不接客户端、想直接看工具列表或手动调一个工具，用官方 Inspector，token 同样要通过它的 `-e` 传入：
@@ -88,7 +97,7 @@ Claude Desktop 的 `claude_desktop_config.json`：
 npx @modelcontextprotocol/inspector -e QQDL_TOKEN=你的token -- node <安装目录>/dist/src/index.js
 ```
 
-浏览器里点 Connect，Tools 页能看到全部工具、填参数、看返回。
+浏览器里点 Connect，Tools 页能看到全部工具、填参数、看返回。调写操作工具时会弹出确认表单，点同意才真正发请求；用它也能最快看出某个客户端走的是弹窗还是确认码。
 
 ## 工具清单
 

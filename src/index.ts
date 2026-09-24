@@ -1,16 +1,18 @@
 #!/usr/bin/env node
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { McpServer, fromJsonSchema, type JsonSchemaType } from '@modelcontextprotocol/server';
+import { CLIENT_CAPABILITIES_META_KEY, McpServer, fromJsonSchema, type ClientCapabilities, type JsonSchemaType, type ServerContext } from '@modelcontextprotocol/server';
 import { serveStdio } from '@modelcontextprotocol/server/stdio';
+import { CONFIRM_TOKEN_SCHEMA, ConfirmTokens, withConfirm } from './confirm.js';
 import { callApi, cfgFromEnv, type Cfg } from './http.js';
 import { renderSetup } from './setup.js';
 import type { ToolDef } from './types.js';
 
-const USAGE = `用法：quanqiudaili-mcp [--readonly]
+const USAGE = `用法：quanqiudaili-mcp [--readonly] [--yes]
       quanqiudaili-mcp setup [--token 你的token] [--readonly]
-  不带参数     全部 33 个工具，含下单扣费与删除子账号
+  不带参数     全部 33 个工具，含下单扣费与删除子账号；写操作执行前先向用户确认
   --readonly   只暴露 19 个只读工具
+  --yes        写操作不确认直接执行，给自动化脚本用
   setup        打印 Claude Code、Claude Desktop、Codex、Cursor、VS Code、Zed、Windsurf 的配置片段，不改任何文件`;
 
 const argv = process.argv.slice(2);
@@ -23,8 +25,11 @@ if (argv[0] === 'setup') {
   process.exit(0);
 }
 
-const readonly = argv[0] === '--readonly' || argv[0] === 'query';
-if (argv.length > 1 || (argv.length === 1 && !readonly && argv[0] !== 'manage')) {
+const flags = new Set(argv);
+const readonly = flags.has('--readonly') || flags.has('query');
+const yes = flags.has('--yes');
+for (const known of ['--readonly', 'query', 'manage', '--yes']) flags.delete(known);
+if (flags.size) {
   console.error(USAGE);
   process.exit(2);
 }
@@ -51,20 +56,31 @@ const INSTRUCTIONS = `全球代理（quanqiudaili.com）externalapi 的 MCP 封�
 - 子账号 id 一律取 sub_account_list 返回的 id 字段；要按订单操作时看该列表每条的 order_product_buy_id。
 - 国家一律用 ISO 3166-1 二字码（如 US）；分页参数 pagesize 最大 100。
 - 下单、续费、带宽升级、删除类工具会从余额扣费或不可恢复：调用前先用 stock_check、product_unit_price、bandwidth_upgrade_price、user_info 查清库存、价格和余额，把参数与预计费用告诉用户并取得明确确认。
+- 写操作工具执行前必须经用户确认：支持弹窗的客户端会弹出操作预览让用户点选；不支持的客户端会先返回预览和 confirm_token，要把预览原样转述给用户，得到明确同意后再带 confirm_token 用相同参数调用。不要替用户做决定，用户没回答就不要带确认码重试。
 - 工具成功时返回 {code, msg, data} 的 JSON；失败时 isError 为 true，文本就是后端给出的原因。若提示 token 无效或过期，请用户重新登录获取 token 并更新 QQDL_TOKEN。
 - 动态住宅代理连接串的写法（cty/st/ct/ss/tm/spec 参数）见资源 ${SESSION_URI}。`;
 
 function createServer(): McpServer {
   const server = new McpServer({ name: 'quanqiudaili-mcp', version }, { instructions: INSTRUCTIONS });
 
+  const tokens = new ConfirmTokens();
+  // 2026 版协议把客户端能力放在每个请求的信封里，2025 版放在连接初始化时
+  const supportsElicitation = (ctx: ServerContext): boolean => {
+    const fromEnvelope = (ctx.mcpReq.envelope as Record<string, unknown> | undefined)?.[CLIENT_CAPABILITIES_META_KEY] as ClientCapabilities | undefined;
+    return !!(fromEnvelope ?? server.server.getClientCapabilities())?.elicitation;
+  };
+
   for (const t of tools) {
+    const confirm = !yes && !t.readOnly;
+    const schema = confirm ? { ...t.inputSchema, properties: { ...t.inputSchema.properties, confirm_token: CONFIRM_TOKEN_SCHEMA } } : t.inputSchema;
+    const exec = (args: Record<string, unknown>) => callApi(t, args, cfg);
     server.registerTool(
       t.name,
       {
         title: t.title,
         description: t.description,
         // 生成好的 JSON Schema 原样下发；SDK 用内置 Ajv 在调用前校验参数
-        inputSchema: fromJsonSchema<Record<string, unknown>>(t.inputSchema as JsonSchemaType),
+        inputSchema: fromJsonSchema<Record<string, unknown>>(schema as JsonSchemaType),
         annotations: {
           title: t.title,
           readOnlyHint: t.readOnly,
@@ -73,7 +89,7 @@ function createServer(): McpServer {
           openWorldHint: true,
         },
       },
-      args => callApi(t, args, cfg),
+      confirm ? withConfirm(t, { supportsElicitation, exec, tokens }) : exec,
     );
   }
 
@@ -91,5 +107,9 @@ function createServer(): McpServer {
   return server;
 }
 
-if (!readonly) console.error('[quanqiudaili-mcp] 当前包含下单扣费与删除子账号的操作工具；只想查询请加 --readonly。');
+if (!readonly) {
+  console.error(yes
+    ? '[quanqiudaili-mcp] --yes：写操作不经确认直接执行。'
+    : '[quanqiudaili-mcp] 当前包含下单扣费与删除子账号的操作工具，执行前会向用户确认；只想查询请加 --readonly。');
+}
 serveStdio(createServer, { onerror: e => console.error(`[quanqiudaili-mcp] ${e.message}`) });

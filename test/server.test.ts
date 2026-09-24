@@ -26,8 +26,19 @@ beforeAll(async () => {
 });
 afterAll(() => backend.close());
 
-async function connect(args: string[]): Promise<Client> {
-  const client = new Client({ name: 'test', version: '0.0.0' });
+type ConnectOptions = { elicit?: 'accept' | 'decline'; messages?: string[]; modern?: boolean };
+
+async function connect(args: string[], opts: ConnectOptions = {}): Promise<Client> {
+  const client = new Client({ name: 'test', version: '0.0.0' }, {
+    capabilities: opts.elicit ? { elicitation: {} } : {},
+    versionNegotiation: opts.modern ? { mode: 'auto' } : undefined,
+  });
+  if (opts.elicit) {
+    client.setRequestHandler('elicitation/create', async request => {
+      opts.messages?.push((request.params as { message: string }).message);
+      return opts.elicit === 'accept' ? { action: 'accept', content: { confirm: true } } : { action: 'decline' };
+    });
+  }
   await client.connect(new StdioClientTransport({
     command: process.execPath,
     args: [ENTRY, ...args],
@@ -70,7 +81,7 @@ describe('stdio server', () => {
   }, 20_000);
 
   it('调用工具：GET 带 query 与 token；POST 走表单并展开括号参数', async () => {
-    const c = await connect([]);
+    const c = await connect(['--yes']);
     hits.length = 0;
 
     const r1 = await c.callTool({ name: 'sub_account_list', arguments: { product_type_id: 1, page: 1, pagesize: 10 } });
@@ -127,4 +138,89 @@ describe('stdio server', () => {
     expect(noToken.status).toBe(2);
     expect(noToken.stderr).toContain('QQDL_TOKEN');
   });
+});
+
+describe('写操作确认', () => {
+  const WRITE = { name: 'sub_account_update_batch', arguments: { product_type_id: 1, ids: '12,13', remark: '测试' } };
+  const LIST = { name: 'sub_account_list', arguments: { product_type_id: 1, page: 1, pagesize: 10 } };
+
+  it('客户端支持弹窗确认：弹窗文案含工具名与参数，用户同意后才请求后端', async () => {
+    const messages: string[] = [];
+    const c = await connect([], { elicit: 'accept', messages });
+    hits.length = 0;
+    const r = await c.callTool(WRITE);
+    expect(r.isError).toBeFalsy();
+    expect(JSON.parse(textOf(r))).toMatchObject({ code: 1 });
+    expect(messages).toHaveLength(1);
+    expect(messages[0]).toContain('批量修改子账号备注（sub_account_update_batch）');
+    expect(messages[0]).toContain('- product_type_id：1（动态住宅流量（不限时长））');
+    expect(hits).toHaveLength(1);
+    expect(decodeURIComponent(hits[0].body)).toBe('product_type_id=1&ids=12,13&remark=测试');
+    await c.close();
+  }, 20_000);
+
+  it('新协议客户端同样走弹窗确认', async () => {
+    const messages: string[] = [];
+    const c = await connect([], { elicit: 'accept', messages, modern: true });
+    hits.length = 0;
+    expect((await c.callTool(WRITE)).isError).toBeFalsy();
+    expect(messages).toHaveLength(1);
+    expect(hits).toHaveLength(1);
+    await c.close();
+  }, 20_000);
+
+  it('用户在弹窗里拒绝：不请求后端，返回取消', async () => {
+    const c = await connect([], { elicit: 'decline' });
+    hits.length = 0;
+    const r = await c.callTool(WRITE);
+    expect(r.isError).toBe(true);
+    expect(textOf(r)).toContain('取消');
+    expect(hits).toHaveLength(0);
+    await c.close();
+  }, 20_000);
+
+  it('客户端不支持弹窗：先返回预览与确认码，带码重调才执行，确认码只能用一次', async () => {
+    const c = await connect([]);
+    hits.length = 0;
+    const first = await c.callTool(WRITE);
+    expect(first.isError).toBeFalsy();
+    expect(textOf(first)).toContain('待确认');
+    expect(textOf(first)).toContain('- ids：12,13');
+    const token = textOf(first).match(/confirm_token=([0-9a-f]+)/)?.[1];
+    expect(token).toBeTruthy();
+    expect(hits).toHaveLength(0);
+
+    const done = await c.callTool({ ...WRITE, arguments: { ...WRITE.arguments, confirm_token: token } });
+    expect(done.isError).toBeFalsy();
+    expect(hits).toHaveLength(1);
+    expect(decodeURIComponent(hits[0].body)).toBe('product_type_id=1&ids=12,13&remark=测试');
+
+    const reused = await c.callTool({ ...WRITE, arguments: { ...WRITE.arguments, confirm_token: token } });
+    expect(reused.isError).toBe(true);
+    expect(hits).toHaveLength(1);
+    await c.close();
+  }, 20_000);
+
+  it('--yes 时写操作直接执行，不弹窗', async () => {
+    const messages: string[] = [];
+    const c = await connect(['--yes'], { elicit: 'accept', messages });
+    hits.length = 0;
+    expect((await c.callTool(WRITE)).isError).toBeFalsy();
+    expect(messages).toHaveLength(0);
+    expect(hits).toHaveLength(1);
+    await c.close();
+  }, 20_000);
+
+  it('只读工具从不确认；只有写工具的 schema 带 confirm_token', async () => {
+    const messages: string[] = [];
+    const c = await connect([], { elicit: 'accept', messages });
+    hits.length = 0;
+    expect((await c.callTool(LIST)).isError).toBeFalsy();
+    expect(messages).toHaveLength(0);
+    expect(hits).toHaveLength(1);
+    const { tools } = await c.listTools();
+    expect(tools.find(t => t.name === 'sub_account_update_batch')?.inputSchema.properties).toHaveProperty('confirm_token');
+    expect(tools.find(t => t.name === 'sub_account_list')?.inputSchema.properties).not.toHaveProperty('confirm_token');
+    await c.close();
+  }, 20_000);
 });
