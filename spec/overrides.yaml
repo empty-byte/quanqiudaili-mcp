@@ -85,11 +85,12 @@ tools:
     params: # 文档只有 2/3/4 三页，后端同样接受 8
       product_type_id: { enum: [2, 3, 4, 8] }
       appoint_ip: { description: 指定从哪些 IP 段购买，每项写一个 IP 段和该段要买的数量，所有 count 之和必须等于 num；不传则由系统随机分配。IP 段用 static_ip_range_list 查 }
-      "appoint_ip[0][ip_str]": { description: IP 段，直接用 static_ip_range_list 返回的段值 }
-      "appoint_ip[0][count]": { type: integer, description: 该段要买的 IP 数量 }
+      "appoint_ip[0][ip_str]": { description: IP 段前两位，如 104.223，填 static_ip_range_list 返回的 ipStr 值 }
+      "appoint_ip[0][count]": { type: integer, description: 该段要买的 IP 数量，不能超过列表里该段的 num }
       country: { description: 国家编码，用 static_country_list 查 }
       city: { description: 城市名称，取 static_city_list 返回的 name 字段；不传则随机 }
-      bandwidth_num: { type: integer, description: 带宽，单位 Mbps，不传默认 5 }
+      bandwidth_num: { type: integer, description: 带宽加购，单位 Mbps，不传默认 5；可选档位和价格用 bandwidth_package_list 按产品和国家查，填返回的 num；数据中心（8）没有带宽加购，不要传 }
+      timelen: { enum: [0, 1, 2, 3, 4], description: 购买时长：0=7天，1=30天，2=90天，3=180天，4=360天 } # 文档缺陷兜底：文档多写了 5=3天，后端只放行 0-4
       use_ip_port: { enum: [0, 1] }
       random_account_password: { enum: [0, 1] }
   /externalapi/device/accountList:
@@ -126,6 +127,7 @@ tools:
     readOnly: true
     params:
       product_type_id: { enum: [2, 3, 4, 8] }
+      country: { required: true, description: 国家编码，用 static_country_list 查 } # 文档缺陷兜底：文档标为可选，后端 require
   /externalapi/bandwidth/monitoringList:
     name: bandwidth_monitoring_list
     title: 带宽监控列表
@@ -171,6 +173,8 @@ tools:
       country: { description: 国家编码，用 dynamic_country_list 查 }
       agree: { enum: [SOCKS5, HTTP, HTTPS], description: 协议，大写 }
       use_random_username: { enum: [0, 1] }
+      limit_flow: { description: 流量上限，单位 GB，0 到 1000000，0 或不传为不限 }
+      url: { description: 需要访问的目标网址，我们会根据您提供的目标网址，动态的分配对应ip }
   /externalapi/device/accountUpdate:
     name: sub_account_update
     title: 修改子账号备注
@@ -233,12 +237,13 @@ tools:
         destructive: true
         params:
           appoint_ip: { description: 指定从哪些 IP 段购买，每项写一个 IP 段和该段要买的数量，所有 count 之和必须等于 num；不传则由系统随机分配。IP 段用 static_ip_range_list 查 }
-          "appoint_ip[0][ip_str]": { description: IP 段，直接用 static_ip_range_list 返回的段值 }
-          "appoint_ip[0][count]": { type: integer, description: 该段要买的 IP 数量 }
+          "appoint_ip[0][ip_str]": { description: IP 段前两位，如 104.223，填 static_ip_range_list 返回的 ipStr 值 }
+          "appoint_ip[0][count]": { type: integer, description: 该段要买的 IP 数量，不能超过列表里该段的 num }
           country: { description: 国家编码，用 static_country_list 查 }
           city: { description: 城市名称，取 static_city_list 返回的 name 字段；不传则随机 }
           agree: { enum: [SOCKS5, HTTP, HTTPS], description: 协议，大写 }
-          bandwidth_num: { type: integer, description: 带宽，单位 Mbps，不传默认 5 }
+          bandwidth_num: { type: integer, description: 带宽加购，单位 Mbps，不传默认 5；可选档位和价格用 bandwidth_package_list 按产品和国家查，填返回的 num；数据中心（8）没有带宽加购，不要传 }
+          timelen: { enum: [0, 1, 2, 3, 4], description: 购买时长：0=7天，1=30天，2=90天，3=180天，4=360天 } # 文档缺陷兜底：同上
           use_ip_port: { enum: [0, 1] }
           random_account_password: { enum: [0, 1] }
   /externalapi/product_order/createTestOrder:
@@ -248,6 +253,7 @@ tools:
     destructive: true
     params: # 文档缺陷兜底：文档写数量 1-20，后端只放行 1-10
       num: { description: 测试 IP 数量，1 到 10 }
+      timelen: { description: 测试时长，固定12小时 }
       bandwidth_num: { type: integer, enum: [5, 10, 15], description: 带宽，单位 Mbps，不传默认 5；10 和 15 是否可选取决于账号等级配置 }
       agree: { enum: [SOCKS5, HTTP, HTTPS], description: 协议，大写 }
       country: { description: 国家编码，用 static_country_list 查 }

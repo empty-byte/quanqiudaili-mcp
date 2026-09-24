@@ -90,11 +90,12 @@
         },
         "country": {
           "type": "string",
-          "description": "地区。国家用 ISO 3166-1 二字码，如 US"
+          "description": "国家编码，用 static_country_list 查。国家用 ISO 3166-1 二字码，如 US"
         }
       },
       "required": [
-        "product_type_id"
+        "product_type_id",
+        "country"
       ],
       "additionalProperties": false
     }
@@ -387,7 +388,7 @@
         },
         "timelen": {
           "type": "integer",
-          "description": "时长计费：固定为12小时"
+          "description": "测试时长，固定12小时"
         },
         "agree": {
           "type": "string",
@@ -453,7 +454,14 @@
         },
         "timelen": {
           "type": "integer",
-          "description": "时长计费类型：0=7天，1=30天，2=90天，3=180天，4=360天，5=3天"
+          "description": "购买时长：0=7天，1=30天，2=90天，3=180天，4=360天",
+          "enum": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ]
         },
         "agree": {
           "type": "string",
@@ -479,11 +487,11 @@
             "properties": {
               "ip_str": {
                 "type": "string",
-                "description": "IP 段，直接用 static_ip_range_list 返回的段值"
+                "description": "IP 段前两位，如 104.223，填 static_ip_range_list 返回的 ipStr 值"
               },
               "count": {
                 "type": "integer",
-                "description": "该段要买的 IP 数量"
+                "description": "该段要买的 IP 数量，不能超过列表里该段的 num"
               }
             },
             "additionalProperties": false
@@ -496,7 +504,7 @@
         },
         "bandwidth_num": {
           "type": "integer",
-          "description": "带宽，单位 Mbps，不传默认 5"
+          "description": "带宽加购，单位 Mbps，不传默认 5；可选档位和价格用 bandwidth_package_list 按产品和国家查，填返回的 num；数据中心（8）没有带宽加购，不要传"
         },
         "remark": {
           "type": "string",
@@ -824,7 +832,14 @@
         },
         "timelen": {
           "type": "integer",
-          "description": "时长计费类型：0=7天，1=30天，2=90天，3=180天，4=360天，5=3天"
+          "description": "购买时长：0=7天，1=30天，2=90天，3=180天，4=360天",
+          "enum": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ]
         },
         "country": {
           "type": "string",
@@ -836,7 +851,7 @@
         },
         "bandwidth_num": {
           "type": "integer",
-          "description": "带宽，单位 Mbps，不传默认 5"
+          "description": "带宽加购，单位 Mbps，不传默认 5；可选档位和价格用 bandwidth_package_list 按产品和国家查，填返回的 num；数据中心（8）没有带宽加购，不要传"
         },
         "appoint_ip": {
           "type": "array",
@@ -845,11 +860,11 @@
             "properties": {
               "ip_str": {
                 "type": "string",
-                "description": "IP 段，直接用 static_ip_range_list 返回的段值"
+                "description": "IP 段前两位，如 104.223，填 static_ip_range_list 返回的 ipStr 值"
               },
               "count": {
                 "type": "integer",
-                "description": "该段要买的 IP 数量"
+                "description": "该段要买的 IP 数量，不能超过列表里该段的 num"
               }
             },
             "additionalProperties": false
@@ -923,7 +938,7 @@
         },
         "url": {
           "type": "string",
-          "description": "业务网址"
+          "description": "需要访问的目标网址，我们会根据您提供的目标网址，动态的分配对应ip"
         },
         "use_random_username": {
           "type": "integer",
@@ -935,7 +950,7 @@
         },
         "limit_flow": {
           "type": "integer",
-          "description": "流量上限"
+          "description": "流量上限，单位 GB，0 到 1000000，0 或不传为不限"
         },
         "agree": {
           "type": "string",
