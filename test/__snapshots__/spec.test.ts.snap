@@ -51,6 +51,7 @@ exports[`spec/tools.json > 完整快照 1`] = `
           "type": "integer",
         },
         "subAccounts": {
+          "description": "子账号 id 列表，取 sub_account_list 返回的 id 字段，可一次传多个",
           "items": {
             "description": "子账号id",
             "type": "string",
@@ -108,8 +109,8 @@ exports[`spec/tools.json > 完整快照 1`] = `
       "additionalProperties": false,
       "properties": {
         "endTime": {
-          "description": "结束时间(历史趋势必填)",
-          "type": "string",
+          "description": "结束时间，Unix 秒级时间戳，只在 trend_type=2 时生效",
+          "type": "integer",
         },
         "product_type_id": {
           "description": "产品类型：2=静态住宅（普通），3=静态住宅（原生），4=静态住宅（运营商原生），8=数据中心",
@@ -122,16 +123,20 @@ exports[`spec/tools.json > 完整快照 1`] = `
           "type": "integer",
         },
         "startTime": {
-          "description": "开始时间(历史趋势必填)",
-          "type": "string",
+          "description": "开始时间，Unix 秒级时间戳，只在 trend_type=2 时生效",
+          "type": "integer",
         },
         "subAccount": {
           "description": "子账号id",
           "type": "string",
         },
         "trend_type": {
-          "description": "带宽监控趋势类型:1=实时监控,2=历史趋势",
-          "type": "string",
+          "description": "趋势类型：1=实时，固定最近 60 分钟，忽略时间参数；2=历史，按 startTime 和 endTime 取，跨度最多 2 天，不传默认最近 1 天",
+          "enum": [
+            1,
+            2,
+          ],
+          "type": "integer",
         },
       },
       "required": [
@@ -166,6 +171,7 @@ exports[`spec/tools.json > 完整快照 1`] = `
           "type": "integer",
         },
         "sub_accounts": {
+          "description": "要升级带宽的子账号 id 列表，取 sub_account_list 返回的 id 字段",
           "items": {
             "description": "子账号",
             "type": "string",
@@ -193,7 +199,7 @@ exports[`spec/tools.json > 完整快照 1`] = `
       "additionalProperties": false,
       "properties": {
         "country_code": {
-          "description": "国家编码，例如：US。从动态住宅（包月）国家列表获取。国家用 ISO 3166-1 二字码，如 US",
+          "description": "国家编码，用 dynamic_country_list 查。国家用 ISO 3166-1 二字码，如 US",
           "type": "string",
         },
         "product_type_id": {
@@ -249,7 +255,7 @@ exports[`spec/tools.json > 完整快照 1`] = `
       "additionalProperties": false,
       "properties": {
         "country_code": {
-          "description": "国家编码，例如：US。从动态住宅国家列表获取。国家用 ISO 3166-1 二字码，如 US",
+          "description": "国家编码，用 dynamic_country_list 查。国家用 ISO 3166-1 二字码，如 US",
           "type": "string",
         },
         "product_type_id": {
@@ -296,6 +302,7 @@ exports[`spec/tools.json > 完整快照 1`] = `
           "type": "integer",
         },
         "subAccountIds": {
+          "description": "要升级带宽的子账号 id 列表，取 sub_account_list 返回的 id 字段，与 bandwidth_upgrade_price 试算时传的一致",
           "items": {
             "description": "子账号",
             "type": "string",
@@ -324,6 +331,11 @@ exports[`spec/tools.json > 完整快照 1`] = `
       "properties": {
         "bill_timelen": {
           "description": "包月有效时长：1=30天，2=90天，3=180天；产品 6 必填，产品 1 忽略",
+          "enum": [
+            1,
+            2,
+            3,
+          ],
           "type": "integer",
         },
         "num": {
@@ -352,29 +364,39 @@ exports[`spec/tools.json > 完整快照 1`] = `
     "title": "购买动态住宅流量",
   },
   {
-    "description": "会从账户余额按时长扣费。购买短期测试用的时长 IP，用于自有平台给用户试用。",
+    "description": "会从账户余额按时长扣费。购买短期测试用的时长 IP，用于自有平台给用户试用；只有代理商账号能调用，普通账号会被拒绝。",
     "destructive": true,
     "inputSchema": {
       "additionalProperties": false,
       "properties": {
         "agree": {
-          "description": "协议：SOCKS5，HTTP，HTTPS",
+          "description": "协议，大写",
+          "enum": [
+            "SOCKS5",
+            "HTTP",
+            "HTTPS",
+          ],
           "type": "string",
         },
         "bandwidth_num": {
-          "description": "不传默认是5M，可传值10和15,10M按每条人民币10元,15M按每条人民币15元计费",
+          "description": "带宽，单位 Mbps，不传默认 5；10 和 15 是否可选取决于账号等级配置",
+          "enum": [
+            5,
+            10,
+            15,
+          ],
           "type": "integer",
         },
         "city": {
-          "description": "静态住宅城市名称,不传默认随机。",
+          "description": "城市名称，取 static_city_list 返回的 name 字段；不传则随机",
           "type": "string",
         },
         "country": {
-          "description": "静态住宅国家编码code。国家用 ISO 3166-1 二字码，如 US",
+          "description": "国家编码，用 static_country_list 查。国家用 ISO 3166-1 二字码，如 US",
           "type": "string",
         },
         "num": {
-          "description": "需要短期购买的子账号数量。范围：1-20之间",
+          "description": "测试 IP 数量，1 到 10",
           "type": "integer",
         },
         "product_type_id": {
@@ -414,19 +436,25 @@ exports[`spec/tools.json > 完整快照 1`] = `
       "additionalProperties": false,
       "properties": {
         "agree": {
-          "description": "协议：SOCKS5，HTTP，HTTPS",
+          "description": "协议，大写",
+          "enum": [
+            "SOCKS5",
+            "HTTP",
+            "HTTPS",
+          ],
           "type": "string",
         },
         "appoint_ip": {
+          "description": "指定从哪些 IP 段购买，每项写一个 IP 段和该段要买的数量，所有 count 之和必须等于 num；不传则由系统随机分配。IP 段用 static_ip_range_list 查",
           "items": {
             "additionalProperties": false,
             "properties": {
               "count": {
-                "description": "指定数量",
+                "description": "该段要买的 IP 数量",
                 "type": "integer",
               },
               "ip_str": {
-                "description": "指定ip段",
+                "description": "IP 段，直接用 static_ip_range_list 返回的段值",
                 "type": "string",
               },
             },
@@ -435,15 +463,15 @@ exports[`spec/tools.json > 完整快照 1`] = `
           "type": "array",
         },
         "bandwidth_num": {
-          "description": "带宽值",
+          "description": "带宽，单位 Mbps，不传默认 5",
           "type": "integer",
         },
         "city": {
-          "description": "静态住宅城市名称。在静态住宅（普通非原生）城市列表可获取城市名称。不传默认随机。",
+          "description": "城市名称，取 static_city_list 返回的 name 字段；不传则随机",
           "type": "string",
         },
         "country": {
-          "description": "静态住宅国家编码code，例如：US。可从静态住宅（普通非原生）国家列表获取。国家用 ISO 3166-1 二字码，如 US",
+          "description": "国家编码，用 static_country_list 查。国家用 ISO 3166-1 二字码，如 US",
           "type": "string",
         },
         "exclude_ip_str": {
@@ -466,6 +494,10 @@ exports[`spec/tools.json > 完整快照 1`] = `
         },
         "random_account_password": {
           "description": "是否生成随机账号密码:0=否,1=是(默认为0)",
+          "enum": [
+            0,
+            1,
+          ],
           "type": "integer",
         },
         "remark": {
@@ -478,6 +510,10 @@ exports[`spec/tools.json > 完整快照 1`] = `
         },
         "use_ip_port": {
           "description": "是否开启ip端口连接:0=不开启,1=开启(默认为0)",
+          "enum": [
+            0,
+            1,
+          ],
           "type": "integer",
         },
       },
@@ -497,12 +533,13 @@ exports[`spec/tools.json > 完整快照 1`] = `
     "title": "购买时长 IP",
   },
   {
-    "description": "为某个订单下的时长类子账号申请退单；不同订单的子账号请分别调用。",
+    "description": "为某个订单下的时长类子账号申请退单；不同订单的子账号请分别调用。只能退下单 1 天内、已支付、未开发票、未申请过退单的购买订单，续费订单和赠送订单不能退。",
     "destructive": false,
     "inputSchema": {
       "additionalProperties": false,
       "properties": {
         "ids": {
+          "description": "要退的子账号 id 列表，取 sub_account_list 返回的 id 字段。这些子账号必须是同一个订单买出来的，订单看子账号列表里每条的 order_product_buy_id 字段",
           "items": {
             "description": "子账号id，对应子账号列表里的id",
             "type": "string",
@@ -514,13 +551,14 @@ exports[`spec/tools.json > 完整快照 1`] = `
           "type": "integer",
         },
         "remark": {
-          "description": "退单备注",
+          "description": "退单原因",
           "type": "string",
         },
       },
       "required": [
         "order_product_buy_id",
         "ids",
+        "remark",
       ],
       "type": "object",
     },
@@ -548,14 +586,25 @@ exports[`spec/tools.json > 完整快照 1`] = `
         },
         "renew_with_bandwidth": {
           "description": "续费时是否包含带宽:0=不包含,1=包含",
+          "enum": [
+            0,
+            1,
+          ],
           "type": "integer",
         },
         "sub_account_ids": {
-          "description": "续费的子账号id，多个以英文逗号连接",
+          "description": "要续费的子账号 id，多个用英文逗号连接，一次最多 300 个",
           "type": "string",
         },
         "timelen": {
-          "description": "时长计费类型：0=7天，1=30天，2=90天，3=180天，4=360天",
+          "description": "续费时长：0=7天，1=30天，2=90天，3=180天，4=360天",
+          "enum": [
+            0,
+            1,
+            2,
+            3,
+            4,
+          ],
           "type": "integer",
         },
       },
@@ -609,11 +658,11 @@ exports[`spec/tools.json > 完整快照 1`] = `
       "additionalProperties": false,
       "properties": {
         "country_code": {
-          "description": "国家code。可从静态住宅（普通非原生）国家列表获取。country_id 和 country_code 二选一。国家用 ISO 3166-1 二字码，如 US",
+          "description": "国家编码，用 static_country_list 查；和 country_id 二选一。国家用 ISO 3166-1 二字码，如 US",
           "type": "string",
         },
         "country_id": {
-          "description": "国家id。可从静态住宅（普通非原生）国家列表获取。country_id 和 country_code 二选一",
+          "description": "国家 id，用 static_country_list 查；和 country_code 二选一",
           "type": "string",
         },
         "product_type_id": {
@@ -673,11 +722,11 @@ exports[`spec/tools.json > 完整快照 1`] = `
       "additionalProperties": false,
       "properties": {
         "city_code": {
-          "description": "城市code",
+          "description": "城市编码，取 static_city_list 返回的 code 字段",
           "type": "string",
         },
         "country_code": {
-          "description": "国家code。国家用 ISO 3166-1 二字码，如 US",
+          "description": "国家编码，用 static_country_list 查。国家用 ISO 3166-1 二字码，如 US",
           "type": "string",
         },
         "exclude_ip_str": {
@@ -685,7 +734,7 @@ exports[`spec/tools.json > 完整快照 1`] = `
           "type": "string",
         },
         "ip_str": {
-          "description": "需要查询的ip段前缀",
+          "description": "IP 段前缀，只能写前 1 到 2 段，如 104 或 104.223",
           "type": "string",
         },
         "page": {
@@ -725,7 +774,7 @@ exports[`spec/tools.json > 完整快照 1`] = `
       "additionalProperties": false,
       "properties": {
         "country_code": {
-          "description": "国家code。可从静态住宅（普通非原生）国家列表获取。国家用 ISO 3166-1 二字码，如 US",
+          "description": "国家编码，用 static_country_list 查。国家用 ISO 3166-1 二字码，如 US",
           "type": "string",
         },
         "product_type_id": {
@@ -758,15 +807,16 @@ exports[`spec/tools.json > 完整快照 1`] = `
       "additionalProperties": false,
       "properties": {
         "appoint_ip": {
+          "description": "指定从哪些 IP 段购买，每项写一个 IP 段和该段要买的数量，所有 count 之和必须等于 num；不传则由系统随机分配。IP 段用 static_ip_range_list 查",
           "items": {
             "additionalProperties": false,
             "properties": {
               "count": {
-                "description": "数量",
+                "description": "该段要买的 IP 数量",
                 "type": "integer",
               },
               "ip_str": {
-                "description": "指定段",
+                "description": "IP 段，直接用 static_ip_range_list 返回的段值",
                 "type": "string",
               },
             },
@@ -775,15 +825,15 @@ exports[`spec/tools.json > 完整快照 1`] = `
           "type": "array",
         },
         "bandwidth_num": {
-          "description": "带宽值",
+          "description": "带宽，单位 Mbps，不传默认 5",
           "type": "integer",
         },
         "city": {
-          "description": "静态住宅城市名称。在静态住宅（运营商原生）城市列表可获取城市名称。不传默认随机。",
+          "description": "城市名称，取 static_city_list 返回的 name 字段；不传则随机",
           "type": "string",
         },
         "country": {
-          "description": "静态住宅国家编码code，例如：US。可从静态住宅（运营商原生）国家列表获取。国家用 ISO 3166-1 二字码，如 US",
+          "description": "国家编码，用 static_country_list 查。国家用 ISO 3166-1 二字码，如 US",
           "type": "string",
         },
         "exclude_ip_str": {
@@ -806,6 +856,10 @@ exports[`spec/tools.json > 完整快照 1`] = `
         },
         "random_account_password": {
           "description": "是否生成随机账号密码:0=否,1=是(默认为0)",
+          "enum": [
+            0,
+            1,
+          ],
           "type": "integer",
         },
         "remark": {
@@ -818,6 +872,10 @@ exports[`spec/tools.json > 完整快照 1`] = `
         },
         "use_ip_port": {
           "description": "是否开启ip端口连接:0=不开启,1=开启(默认为0)",
+          "enum": [
+            0,
+            1,
+          ],
           "type": "integer",
         },
       },
@@ -842,7 +900,12 @@ exports[`spec/tools.json > 完整快照 1`] = `
       "additionalProperties": false,
       "properties": {
         "agree": {
-          "description": "协议：SOCKS5，HTTP，HTTPS。产品 6 下必填",
+          "description": "协议，大写。产品 6 下必填",
+          "enum": [
+            "SOCKS5",
+            "HTTP",
+            "HTTPS",
+          ],
           "type": "string",
         },
         "changeInterval": {
@@ -850,7 +913,7 @@ exports[`spec/tools.json > 完整快照 1`] = `
           "type": "integer",
         },
         "country": {
-          "description": "国家编码，例如：US。从动态住宅（包月）国家列表获取。国家用 ISO 3166-1 二字码，如 US",
+          "description": "国家编码，用 dynamic_country_list 查。国家用 ISO 3166-1 二字码，如 US",
           "type": "string",
         },
         "limit_flow": {
@@ -875,6 +938,10 @@ exports[`spec/tools.json > 完整快照 1`] = `
         },
         "use_random_username": {
           "description": "创建时是否使用随机账号和密码。0=不使用，1=使用",
+          "enum": [
+            0,
+            1,
+          ],
           "type": "integer",
         },
       },
@@ -899,8 +966,8 @@ exports[`spec/tools.json > 完整快照 1`] = `
       "additionalProperties": false,
       "properties": {
         "id": {
-          "description": "子账号id",
-          "type": "string",
+          "description": "子账号 id，取 sub_account_list 返回的 id 字段",
+          "type": "integer",
         },
         "product_type_id": {
           "description": "产品类型：1=动态住宅流量（不限时长），6=动态住宅流量（包月）",
@@ -961,7 +1028,7 @@ exports[`spec/tools.json > 完整快照 1`] = `
       "additionalProperties": false,
       "properties": {
         "month": {
-          "description": "查询月份",
+          "description": "查询的月份，格式 YYYY-MM，如 2026-09",
           "type": "string",
         },
         "product_type_id": {
@@ -1028,11 +1095,11 @@ exports[`spec/tools.json > 完整快照 1`] = `
       "additionalProperties": false,
       "properties": {
         "country": {
-          "description": "静态住宅国家编码code，例如：US。可从静态住宅（普通非原生）国家列表获取。国家用 ISO 3166-1 二字码，如 US",
+          "description": "按国家筛选。动态产品用 dynamic_country_list 查编码，时长类产品用 static_country_list。国家用 ISO 3166-1 二字码，如 US",
           "type": "string",
         },
         "exportIp": {
-          "description": "出口IP,支持模糊查询",
+          "description": "按出口 IP 筛选，可填完整 IP 或前缀（如 104.223），按前缀匹配",
           "type": "string",
         },
         "ids": {
@@ -1064,18 +1131,24 @@ exports[`spec/tools.json > 完整快照 1`] = `
           "type": "string",
         },
         "searchArr": {
+          "description": "批量搜索的值列表，内容由 search_type 决定：自定义用户名、出口 IP 或备注关键词，一次最多 100 个",
           "items": {
-            "description": "搜索数组,单次最多100条",
+            "description": "单个搜索值",
             "type": "string",
           },
           "type": "array",
         },
         "search_type": {
-          "description": "批量搜索类型(精准匹配):0=自定义账密;1=出口ip;2=备注",
+          "description": "批量搜索类型，和 searchArr 一起用：0=按自定义用户名精确找，1=按出口 IP 精确找，2=按备注模糊找（多个关键词任一命中即可）",
+          "enum": [
+            0,
+            1,
+            2,
+          ],
           "type": "integer",
         },
         "subAccountEnd": {
-          "description": "子账号区间搜索[结束]",
+          "description": "子账号 id 区间终点，与 subAccountStart 一起用",
           "type": "integer",
         },
         "subAccountName": {
@@ -1083,7 +1156,7 @@ exports[`spec/tools.json > 完整快照 1`] = `
           "type": "string",
         },
         "subAccountStart": {
-          "description": "子账号区间搜索[初始]",
+          "description": "子账号 id 区间起点，与 subAccountEnd 一起用，跨度不超过 5000",
           "type": "integer",
         },
       },
@@ -1107,6 +1180,7 @@ exports[`spec/tools.json > 完整快照 1`] = `
       "additionalProperties": false,
       "properties": {
         "content": {
+          "description": "要设置的子账号列表，每项给子账号 id 和新的用户名、密码，这些子账号都要属于 product_type_id 这个产品",
           "items": {
             "additionalProperties": false,
             "properties": {
@@ -1119,7 +1193,7 @@ exports[`spec/tools.json > 完整快照 1`] = `
                 "type": "string",
               },
               "id": {
-                "description": "子账号id",
+                "description": "子账号 id，取 sub_account_list 返回的 id 字段",
                 "type": "integer",
               },
             },
@@ -1233,6 +1307,10 @@ exports[`spec/tools.json > 完整快照 1`] = `
         },
         "use_ip_port": {
           "description": "直连开关状态:0=关闭,1=开启",
+          "enum": [
+            0,
+            1,
+          ],
           "type": "integer",
         },
       },

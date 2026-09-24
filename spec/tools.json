@@ -57,7 +57,8 @@
           "items": {
             "type": "string",
             "description": "子账号id"
-          }
+          },
+          "description": "子账号 id 列表，取 sub_account_list 返回的 id 字段，可一次传多个"
         }
       },
       "required": [
@@ -124,16 +125,20 @@
           "description": "子账号id"
         },
         "trend_type": {
-          "type": "string",
-          "description": "带宽监控趋势类型:1=实时监控,2=历史趋势"
+          "type": "integer",
+          "description": "趋势类型：1=实时，固定最近 60 分钟，忽略时间参数；2=历史，按 startTime 和 endTime 取，跨度最多 2 天，不传默认最近 1 天",
+          "enum": [
+            1,
+            2
+          ]
         },
         "startTime": {
-          "type": "string",
-          "description": "开始时间(历史趋势必填)"
+          "type": "integer",
+          "description": "开始时间，Unix 秒级时间戳，只在 trend_type=2 时生效"
         },
         "endTime": {
-          "type": "string",
-          "description": "结束时间(历史趋势必填)"
+          "type": "integer",
+          "description": "结束时间，Unix 秒级时间戳，只在 trend_type=2 时生效"
         }
       },
       "required": [
@@ -158,7 +163,8 @@
           "items": {
             "type": "string",
             "description": "子账号"
-          }
+          },
+          "description": "要升级带宽的子账号 id 列表，取 sub_account_list 返回的 id 字段"
         },
         "bandwidth_num": {
           "type": "integer",
@@ -204,7 +210,7 @@
         },
         "country_code": {
           "type": "string",
-          "description": "国家编码，例如：US。从动态住宅（包月）国家列表获取。国家用 ISO 3166-1 二字码，如 US"
+          "description": "国家编码，用 dynamic_country_list 查。国家用 ISO 3166-1 二字码，如 US"
         }
       },
       "required": [
@@ -260,7 +266,7 @@
         },
         "country_code": {
           "type": "string",
-          "description": "国家编码，例如：US。从动态住宅国家列表获取。国家用 ISO 3166-1 二字码，如 US"
+          "description": "国家编码，用 dynamic_country_list 查。国家用 ISO 3166-1 二字码，如 US"
         }
       },
       "required": [
@@ -288,7 +294,8 @@
           "items": {
             "type": "string",
             "description": "子账号"
-          }
+          },
+          "description": "要升级带宽的子账号 id 列表，取 sub_account_list 返回的 id 字段，与 bandwidth_upgrade_price 试算时传的一致"
         },
         "bandwidth_num": {
           "type": "integer",
@@ -338,7 +345,12 @@
         },
         "bill_timelen": {
           "type": "integer",
-          "description": "包月有效时长：1=30天，2=90天，3=180天；产品 6 必填，产品 1 忽略"
+          "description": "包月有效时长：1=30天，2=90天，3=180天；产品 6 必填，产品 1 忽略",
+          "enum": [
+            1,
+            2,
+            3
+          ]
         }
       },
       "required": [
@@ -351,7 +363,7 @@
   {
     "name": "order_buy_test_ip",
     "title": "购买时长测试 IP",
-    "description": "会从账户余额按时长扣费。购买短期测试用的时长 IP，用于自有平台给用户试用。",
+    "description": "会从账户余额按时长扣费。购买短期测试用的时长 IP，用于自有平台给用户试用；只有代理商账号能调用，普通账号会被拒绝。",
     "readOnly": false,
     "destructive": true,
     "method": "POST",
@@ -371,7 +383,7 @@
         },
         "num": {
           "type": "integer",
-          "description": "需要短期购买的子账号数量。范围：1-20之间"
+          "description": "测试 IP 数量，1 到 10"
         },
         "timelen": {
           "type": "integer",
@@ -379,19 +391,29 @@
         },
         "agree": {
           "type": "string",
-          "description": "协议：SOCKS5，HTTP，HTTPS"
+          "description": "协议，大写",
+          "enum": [
+            "SOCKS5",
+            "HTTP",
+            "HTTPS"
+          ]
         },
         "country": {
           "type": "string",
-          "description": "静态住宅国家编码code。国家用 ISO 3166-1 二字码，如 US"
+          "description": "国家编码，用 static_country_list 查。国家用 ISO 3166-1 二字码，如 US"
         },
         "city": {
           "type": "string",
-          "description": "静态住宅城市名称,不传默认随机。"
+          "description": "城市名称，取 static_city_list 返回的 name 字段；不传则随机"
         },
         "bandwidth_num": {
           "type": "integer",
-          "description": "不传默认是5M，可传值10和15,10M按每条人民币10元,15M按每条人民币15元计费"
+          "description": "带宽，单位 Mbps，不传默认 5；10 和 15 是否可选取决于账号等级配置",
+          "enum": [
+            5,
+            10,
+            15
+          ]
         }
       },
       "required": [
@@ -435,15 +457,20 @@
         },
         "agree": {
           "type": "string",
-          "description": "协议：SOCKS5，HTTP，HTTPS"
+          "description": "协议，大写",
+          "enum": [
+            "SOCKS5",
+            "HTTP",
+            "HTTPS"
+          ]
         },
         "country": {
           "type": "string",
-          "description": "静态住宅国家编码code，例如：US。可从静态住宅（普通非原生）国家列表获取。国家用 ISO 3166-1 二字码，如 US"
+          "description": "国家编码，用 static_country_list 查。国家用 ISO 3166-1 二字码，如 US"
         },
         "city": {
           "type": "string",
-          "description": "静态住宅城市名称。在静态住宅（普通非原生）城市列表可获取城市名称。不传默认随机。"
+          "description": "城市名称，取 static_city_list 返回的 name 字段；不传则随机"
         },
         "appoint_ip": {
           "type": "array",
@@ -452,15 +479,16 @@
             "properties": {
               "ip_str": {
                 "type": "string",
-                "description": "指定ip段"
+                "description": "IP 段，直接用 static_ip_range_list 返回的段值"
               },
               "count": {
                 "type": "integer",
-                "description": "指定数量"
+                "description": "该段要买的 IP 数量"
               }
             },
             "additionalProperties": false
-          }
+          },
+          "description": "指定从哪些 IP 段购买，每项写一个 IP 段和该段要买的数量，所有 count 之和必须等于 num；不传则由系统随机分配。IP 段用 static_ip_range_list 查"
         },
         "exclude_ip_str": {
           "type": "string",
@@ -468,7 +496,7 @@
         },
         "bandwidth_num": {
           "type": "integer",
-          "description": "带宽值"
+          "description": "带宽，单位 Mbps，不传默认 5"
         },
         "remark": {
           "type": "string",
@@ -476,11 +504,19 @@
         },
         "use_ip_port": {
           "type": "integer",
-          "description": "是否开启ip端口连接:0=不开启,1=开启(默认为0)"
+          "description": "是否开启ip端口连接:0=不开启,1=开启(默认为0)",
+          "enum": [
+            0,
+            1
+          ]
         },
         "random_account_password": {
           "type": "integer",
-          "description": "是否生成随机账号密码:0=否,1=是(默认为0)"
+          "description": "是否生成随机账号密码:0=否,1=是(默认为0)",
+          "enum": [
+            0,
+            1
+          ]
         }
       },
       "required": [
@@ -496,7 +532,7 @@
   {
     "name": "order_refund_apply",
     "title": "申请退单",
-    "description": "为某个订单下的时长类子账号申请退单；不同订单的子账号请分别调用。",
+    "description": "为某个订单下的时长类子账号申请退单；不同订单的子账号请分别调用。只能退下单 1 天内、已支付、未开发票、未申请过退单的购买订单，续费订单和赠送订单不能退。",
     "readOnly": false,
     "destructive": false,
     "method": "POST",
@@ -513,16 +549,18 @@
           "items": {
             "type": "string",
             "description": "子账号id，对应子账号列表里的id"
-          }
+          },
+          "description": "要退的子账号 id 列表，取 sub_account_list 返回的 id 字段。这些子账号必须是同一个订单买出来的，订单看子账号列表里每条的 order_product_buy_id 字段"
         },
         "remark": {
           "type": "string",
-          "description": "退单备注"
+          "description": "退单原因"
         }
       },
       "required": [
         "order_product_buy_id",
-        "ids"
+        "ids",
+        "remark"
       ],
       "additionalProperties": false
     }
@@ -550,15 +588,26 @@
         },
         "timelen": {
           "type": "integer",
-          "description": "时长计费类型：0=7天，1=30天，2=90天，3=180天，4=360天"
+          "description": "续费时长：0=7天，1=30天，2=90天，3=180天，4=360天",
+          "enum": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ]
         },
         "sub_account_ids": {
           "type": "string",
-          "description": "续费的子账号id，多个以英文逗号连接"
+          "description": "要续费的子账号 id，多个用英文逗号连接，一次最多 300 个"
         },
         "renew_with_bandwidth": {
           "type": "integer",
-          "description": "续费时是否包含带宽:0=不包含,1=包含"
+          "description": "续费时是否包含带宽:0=不包含,1=包含",
+          "enum": [
+            0,
+            1
+          ]
         }
       },
       "required": [
@@ -622,11 +671,11 @@
         },
         "country_id": {
           "type": "string",
-          "description": "国家id。可从静态住宅（普通非原生）国家列表获取。country_id 和 country_code 二选一"
+          "description": "国家 id，用 static_country_list 查；和 country_code 二选一"
         },
         "country_code": {
           "type": "string",
-          "description": "国家code。可从静态住宅（普通非原生）国家列表获取。country_id 和 country_code 二选一。国家用 ISO 3166-1 二字码，如 US"
+          "description": "国家编码，用 static_country_list 查；和 country_id 二选一。国家用 ISO 3166-1 二字码，如 US"
         }
       },
       "required": [
@@ -686,15 +735,15 @@
         },
         "country_code": {
           "type": "string",
-          "description": "国家code。国家用 ISO 3166-1 二字码，如 US"
+          "description": "国家编码，用 static_country_list 查。国家用 ISO 3166-1 二字码，如 US"
         },
         "city_code": {
           "type": "string",
-          "description": "城市code"
+          "description": "城市编码，取 static_city_list 返回的 code 字段"
         },
         "ip_str": {
           "type": "string",
-          "description": "需要查询的ip段前缀"
+          "description": "IP 段前缀，只能写前 1 到 2 段，如 104 或 104.223"
         },
         "exclude_ip_str": {
           "type": "string",
@@ -738,7 +787,7 @@
         },
         "country_code": {
           "type": "string",
-          "description": "国家code。可从静态住宅（普通非原生）国家列表获取。国家用 ISO 3166-1 二字码，如 US"
+          "description": "国家编码，用 static_country_list 查。国家用 ISO 3166-1 二字码，如 US"
         }
       },
       "required": [
@@ -779,15 +828,15 @@
         },
         "country": {
           "type": "string",
-          "description": "静态住宅国家编码code，例如：US。可从静态住宅（运营商原生）国家列表获取。国家用 ISO 3166-1 二字码，如 US"
+          "description": "国家编码，用 static_country_list 查。国家用 ISO 3166-1 二字码，如 US"
         },
         "city": {
           "type": "string",
-          "description": "静态住宅城市名称。在静态住宅（运营商原生）城市列表可获取城市名称。不传默认随机。"
+          "description": "城市名称，取 static_city_list 返回的 name 字段；不传则随机"
         },
         "bandwidth_num": {
           "type": "integer",
-          "description": "带宽值"
+          "description": "带宽，单位 Mbps，不传默认 5"
         },
         "appoint_ip": {
           "type": "array",
@@ -796,15 +845,16 @@
             "properties": {
               "ip_str": {
                 "type": "string",
-                "description": "指定段"
+                "description": "IP 段，直接用 static_ip_range_list 返回的段值"
               },
               "count": {
                 "type": "integer",
-                "description": "数量"
+                "description": "该段要买的 IP 数量"
               }
             },
             "additionalProperties": false
-          }
+          },
+          "description": "指定从哪些 IP 段购买，每项写一个 IP 段和该段要买的数量，所有 count 之和必须等于 num；不传则由系统随机分配。IP 段用 static_ip_range_list 查"
         },
         "exclude_ip_str": {
           "type": "string",
@@ -816,11 +866,19 @@
         },
         "use_ip_port": {
           "type": "integer",
-          "description": "是否开启ip端口连接:0=不开启,1=开启(默认为0)"
+          "description": "是否开启ip端口连接:0=不开启,1=开启(默认为0)",
+          "enum": [
+            0,
+            1
+          ]
         },
         "random_account_password": {
           "type": "integer",
-          "description": "是否生成随机账号密码:0=否,1=是(默认为0)"
+          "description": "是否生成随机账号密码:0=否,1=是(默认为0)",
+          "enum": [
+            0,
+            1
+          ]
         }
       },
       "required": [
@@ -861,7 +919,7 @@
         },
         "country": {
           "type": "string",
-          "description": "国家编码，例如：US。从动态住宅（包月）国家列表获取。国家用 ISO 3166-1 二字码，如 US"
+          "description": "国家编码，用 dynamic_country_list 查。国家用 ISO 3166-1 二字码，如 US"
         },
         "url": {
           "type": "string",
@@ -869,7 +927,11 @@
         },
         "use_random_username": {
           "type": "integer",
-          "description": "创建时是否使用随机账号和密码。0=不使用，1=使用"
+          "description": "创建时是否使用随机账号和密码。0=不使用，1=使用",
+          "enum": [
+            0,
+            1
+          ]
         },
         "limit_flow": {
           "type": "integer",
@@ -877,7 +939,12 @@
         },
         "agree": {
           "type": "string",
-          "description": "协议：SOCKS5，HTTP，HTTPS。产品 6 下必填"
+          "description": "协议，大写。产品 6 下必填",
+          "enum": [
+            "SOCKS5",
+            "HTTP",
+            "HTTPS"
+          ]
         }
       },
       "required": [
@@ -909,8 +976,8 @@
           ]
         },
         "id": {
-          "type": "string",
-          "description": "子账号id"
+          "type": "integer",
+          "description": "子账号 id，取 sub_account_list 返回的 id 字段"
         }
       },
       "required": [
@@ -976,7 +1043,7 @@
         },
         "month": {
           "type": "string",
-          "description": "查询月份"
+          "description": "查询的月份，格式 YYYY-MM，如 2026-09"
         }
       },
       "required": [
@@ -1055,7 +1122,7 @@
         },
         "country": {
           "type": "string",
-          "description": "静态住宅国家编码code，例如：US。可从静态住宅（普通非原生）国家列表获取。国家用 ISO 3166-1 二字码，如 US"
+          "description": "按国家筛选。动态产品用 dynamic_country_list 查编码，时长类产品用 static_country_list。国家用 ISO 3166-1 二字码，如 US"
         },
         "subAccountName": {
           "type": "string",
@@ -1063,11 +1130,11 @@
         },
         "subAccountStart": {
           "type": "integer",
-          "description": "子账号区间搜索[初始]"
+          "description": "子账号 id 区间起点，与 subAccountEnd 一起用，跨度不超过 5000"
         },
         "subAccountEnd": {
           "type": "integer",
-          "description": "子账号区间搜索[结束]"
+          "description": "子账号 id 区间终点，与 subAccountStart 一起用"
         },
         "ids": {
           "type": "string",
@@ -1075,18 +1142,24 @@
         },
         "exportIp": {
           "type": "string",
-          "description": "出口IP,支持模糊查询"
+          "description": "按出口 IP 筛选，可填完整 IP 或前缀（如 104.223），按前缀匹配"
         },
         "search_type": {
           "type": "integer",
-          "description": "批量搜索类型(精准匹配):0=自定义账密;1=出口ip;2=备注"
+          "description": "批量搜索类型，和 searchArr 一起用：0=按自定义用户名精确找，1=按出口 IP 精确找，2=按备注模糊找（多个关键词任一命中即可）",
+          "enum": [
+            0,
+            1,
+            2
+          ]
         },
         "searchArr": {
           "type": "array",
           "items": {
             "type": "string",
-            "description": "搜索数组,单次最多100条"
-          }
+            "description": "单个搜索值"
+          },
+          "description": "批量搜索的值列表，内容由 search_type 决定：自定义用户名、出口 IP 或备注关键词，一次最多 100 个"
         }
       },
       "required": [
@@ -1127,7 +1200,7 @@
             "properties": {
               "id": {
                 "type": "integer",
-                "description": "子账号id"
+                "description": "子账号 id，取 sub_account_list 返回的 id 字段"
               },
               "customUsername": {
                 "type": "string",
@@ -1144,7 +1217,8 @@
               "customUsername",
               "customPassword"
             ]
-          }
+          },
+          "description": "要设置的子账号列表，每项给子账号 id 和新的用户名、密码，这些子账号都要属于 product_type_id 这个产品"
         }
       },
       "required": [
@@ -1235,7 +1309,11 @@
         },
         "use_ip_port": {
           "type": "integer",
-          "description": "直连开关状态:0=关闭,1=开启"
+          "description": "直连开关状态:0=关闭,1=开启",
+          "enum": [
+            0,
+            1
+          ]
         }
       },
       "required": [
