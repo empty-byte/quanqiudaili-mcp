@@ -1,0 +1,1338 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`spec/tools.json > 完整快照 1`] = `
+[
+  {
+    "description": "查询子账号剩余有效期内已购带宽的详情。",
+    "destructive": false,
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "product_type_id": {
+          "description": "产品类型：2=静态住宅（普通），3=静态住宅（原生），4=静态住宅（运营商原生），8=数据中心",
+          "enum": [
+            2,
+            3,
+            4,
+            8,
+          ],
+          "type": "integer",
+        },
+        "subAccount": {
+          "description": "子账号id",
+          "type": "string",
+        },
+      },
+      "required": [
+        "product_type_id",
+      ],
+      "type": "object",
+    },
+    "method": "GET",
+    "name": "bandwidth_detail",
+    "path": "/externalapi/bandwidth/bandwidthNumDetail",
+    "readOnly": true,
+    "title": "有效期内带宽详情",
+  },
+  {
+    "description": "查询时长类子账号的带宽监控数据。",
+    "destructive": false,
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "product_type_id": {
+          "description": "产品类型：2=静态住宅（普通），3=静态住宅（原生），4=静态住宅（运营商原生），8=数据中心",
+          "enum": [
+            2,
+            3,
+            4,
+            8,
+          ],
+          "type": "integer",
+        },
+        "subAccounts": {
+          "items": {
+            "description": "子账号id",
+            "type": "string",
+          },
+          "type": "array",
+        },
+      },
+      "required": [
+        "product_type_id",
+      ],
+      "type": "object",
+    },
+    "method": "GET",
+    "name": "bandwidth_monitoring_list",
+    "path": "/externalapi/bandwidth/monitoringList",
+    "readOnly": true,
+    "title": "带宽监控列表",
+  },
+  {
+    "description": "查询时长类产品可购买的带宽套餐。",
+    "destructive": false,
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "country": {
+          "description": "地区。国家用 ISO 3166-1 二字码，如 US",
+          "type": "string",
+        },
+        "product_type_id": {
+          "description": "产品类型：2=静态住宅（普通），3=静态住宅（原生），4=静态住宅（运营商原生），8=数据中心",
+          "enum": [
+            2,
+            3,
+            4,
+            8,
+          ],
+          "type": "integer",
+        },
+      },
+      "required": [
+        "product_type_id",
+      ],
+      "type": "object",
+    },
+    "method": "GET",
+    "name": "bandwidth_package_list",
+    "path": "/externalapi/bandwidth/getBandwidthList",
+    "readOnly": true,
+    "title": "带宽套餐列表",
+  },
+  {
+    "description": "查询单个时长类子账号在一段时间内的带宽使用趋势。",
+    "destructive": false,
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "endTime": {
+          "description": "结束时间(历史趋势必填)",
+          "type": "string",
+        },
+        "product_type_id": {
+          "description": "产品类型：2=静态住宅（普通），3=静态住宅（原生），4=静态住宅（运营商原生），8=数据中心",
+          "enum": [
+            2,
+            3,
+            4,
+            8,
+          ],
+          "type": "integer",
+        },
+        "startTime": {
+          "description": "开始时间(历史趋势必填)",
+          "type": "string",
+        },
+        "subAccount": {
+          "description": "子账号id",
+          "type": "string",
+        },
+        "trend_type": {
+          "description": "带宽监控趋势类型:1=实时监控,2=历史趋势",
+          "type": "string",
+        },
+      },
+      "required": [
+        "product_type_id",
+      ],
+      "type": "object",
+    },
+    "method": "GET",
+    "name": "bandwidth_trend",
+    "path": "/externalapi/bandwidth/monitoringTrend",
+    "readOnly": true,
+    "title": "子账号带宽趋势",
+  },
+  {
+    "description": "计算为子账号升级带宽需要的费用，不下单、不扣费。下单请用 order_bandwidth_upgrade。",
+    "destructive": false,
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "bandwidth_num": {
+          "description": "要升级的带宽值",
+          "type": "integer",
+        },
+        "product_type_id": {
+          "description": "产品类型：2=静态住宅（普通），3=静态住宅（原生），4=静态住宅（运营商原生），8=数据中心",
+          "enum": [
+            2,
+            3,
+            4,
+            8,
+          ],
+          "type": "integer",
+        },
+        "sub_accounts": {
+          "items": {
+            "description": "子账号",
+            "type": "string",
+          },
+          "type": "array",
+        },
+      },
+      "required": [
+        "sub_accounts",
+        "bandwidth_num",
+        "product_type_id",
+      ],
+      "type": "object",
+    },
+    "method": "GET",
+    "name": "bandwidth_upgrade_price",
+    "path": "/externalapi/product_price/bandwidthUpgradePrice",
+    "readOnly": true,
+    "title": "带宽升级价格试算",
+  },
+  {
+    "description": "查询动态住宅流量产品某国家下可选的城市。",
+    "destructive": false,
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "country_code": {
+          "description": "国家编码，例如：US。从动态住宅（包月）国家列表获取。国家用 ISO 3166-1 二字码，如 US",
+          "type": "string",
+        },
+        "product_type_id": {
+          "description": "产品类型：1=动态住宅流量（不限时长），6=动态住宅流量（包月）",
+          "enum": [
+            1,
+            6,
+          ],
+          "type": "integer",
+        },
+      },
+      "required": [
+        "product_type_id",
+      ],
+      "type": "object",
+    },
+    "method": "GET",
+    "name": "dynamic_city_list",
+    "path": "/externalapi/common/cityList",
+    "readOnly": true,
+    "title": "动态产品城市列表",
+  },
+  {
+    "description": "查询动态住宅流量产品（product_type_id 1 或 6）可选的国家及编码。",
+    "destructive": false,
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "product_type_id": {
+          "description": "产品类型：1=动态住宅流量（不限时长），6=动态住宅流量（包月）",
+          "enum": [
+            1,
+            6,
+          ],
+          "type": "integer",
+        },
+      },
+      "required": [
+        "product_type_id",
+      ],
+      "type": "object",
+    },
+    "method": "GET",
+    "name": "dynamic_country_list",
+    "path": "/externalapi/common/countryList",
+    "readOnly": true,
+    "title": "动态产品国家列表",
+  },
+  {
+    "description": "查询动态住宅流量产品某国家下可选的州或省。",
+    "destructive": false,
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "country_code": {
+          "description": "国家编码，例如：US。从动态住宅国家列表获取。国家用 ISO 3166-1 二字码，如 US",
+          "type": "string",
+        },
+        "product_type_id": {
+          "description": "产品类型：1=动态住宅流量（不限时长），6=动态住宅流量（包月）",
+          "enum": [
+            1,
+            6,
+          ],
+          "type": "integer",
+        },
+      },
+      "required": [
+        "product_type_id",
+      ],
+      "type": "object",
+    },
+    "method": "GET",
+    "name": "dynamic_state_list",
+    "path": "/externalapi/common/stateList",
+    "readOnly": true,
+    "title": "动态产品州/省列表",
+  },
+  {
+    "description": "会从账户余额扣费。为时长类子账号升级带宽，先用 bandwidth_upgrade_price 试算并向用户确认。",
+    "destructive": true,
+    "fixed": {
+      "pay_method": "balance",
+    },
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "bandwidth_num": {
+          "description": "要升级的带宽",
+          "type": "integer",
+        },
+        "product_type_id": {
+          "description": "产品类型：2=静态住宅（普通），3=静态住宅（原生），4=静态住宅（运营商原生），8=数据中心",
+          "enum": [
+            2,
+            3,
+            4,
+            8,
+          ],
+          "type": "integer",
+        },
+        "subAccountIds": {
+          "items": {
+            "description": "子账号",
+            "type": "string",
+          },
+          "type": "array",
+        },
+      },
+      "required": [
+        "subAccountIds",
+        "bandwidth_num",
+        "product_type_id",
+      ],
+      "type": "object",
+    },
+    "method": "POST",
+    "name": "order_bandwidth_upgrade",
+    "path": "/externalapi/product_order/createBandwidthUpgradeOrder",
+    "readOnly": false,
+    "title": "带宽升级下单",
+  },
+  {
+    "description": "会从账户余额扣费。购买动态住宅流量：产品 1 按 GB 购买，num 为 GB 数（1-1024）；产品 6 为包月，bill_timelen 指定月数。下单前先用 product_unit_price 查价、user_info 查余额，并向用户确认。",
+    "destructive": true,
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "bill_timelen": {
+          "description": "包月有效时长：1=30天，2=90天，3=180天；产品 6 必填，产品 1 忽略",
+          "type": "integer",
+        },
+        "num": {
+          "description": "需要购买的流量数量。单位：GB。范围：1-1024GB之间",
+          "type": "integer",
+        },
+        "product_type_id": {
+          "description": "产品类型：1=动态住宅流量（不限时长），6=动态住宅流量（包月）",
+          "enum": [
+            1,
+            6,
+          ],
+          "type": "integer",
+        },
+      },
+      "required": [
+        "product_type_id",
+        "num",
+      ],
+      "type": "object",
+    },
+    "method": "POST",
+    "name": "order_buy_dynamic",
+    "path": "/externalapi/product_order/createProductBuyOrder",
+    "readOnly": false,
+    "title": "购买动态住宅流量",
+  },
+  {
+    "description": "会从账户余额按时长扣费。购买短期测试用的时长 IP，用于自有平台给用户试用。",
+    "destructive": true,
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "agree": {
+          "description": "协议：SOCKS5，HTTP，HTTPS",
+          "type": "string",
+        },
+        "bandwidth_num": {
+          "description": "不传默认是5M，可传值10和15,10M按每条人民币10元,15M按每条人民币15元计费",
+          "type": "integer",
+        },
+        "city": {
+          "description": "静态住宅城市名称,不传默认随机。",
+          "type": "string",
+        },
+        "country": {
+          "description": "静态住宅国家编码code。国家用 ISO 3166-1 二字码，如 US",
+          "type": "string",
+        },
+        "num": {
+          "description": "需要短期购买的子账号数量。范围：1-20之间",
+          "type": "integer",
+        },
+        "product_type_id": {
+          "description": "产品类型：2=静态住宅（普通），3=静态住宅（原生），4=静态住宅（运营商原生），8=数据中心",
+          "enum": [
+            2,
+            3,
+            4,
+            8,
+          ],
+          "type": "integer",
+        },
+        "timelen": {
+          "description": "时长计费：固定为12小时",
+          "type": "integer",
+        },
+      },
+      "required": [
+        "product_type_id",
+        "num",
+        "timelen",
+        "agree",
+        "country",
+      ],
+      "type": "object",
+    },
+    "method": "POST",
+    "name": "order_buy_test_ip",
+    "path": "/externalapi/product_order/createTestOrder",
+    "readOnly": false,
+    "title": "购买时长测试 IP",
+  },
+  {
+    "description": "会从账户余额扣费。购买静态住宅（2/3/4）或数据中心（8）时长 IP，num 为 IP 数量（1-300）。下单前先用 stock_check 检测库存、product_unit_price 查价，并向用户确认。",
+    "destructive": true,
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "agree": {
+          "description": "协议：SOCKS5，HTTP，HTTPS",
+          "type": "string",
+        },
+        "appoint_ip": {
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "count": {
+                "description": "指定数量",
+                "type": "integer",
+              },
+              "ip_str": {
+                "description": "指定ip段",
+                "type": "string",
+              },
+            },
+            "type": "object",
+          },
+          "type": "array",
+        },
+        "bandwidth_num": {
+          "description": "带宽值",
+          "type": "integer",
+        },
+        "city": {
+          "description": "静态住宅城市名称。在静态住宅（普通非原生）城市列表可获取城市名称。不传默认随机。",
+          "type": "string",
+        },
+        "country": {
+          "description": "静态住宅国家编码code，例如：US。可从静态住宅（普通非原生）国家列表获取。国家用 ISO 3166-1 二字码，如 US",
+          "type": "string",
+        },
+        "exclude_ip_str": {
+          "description": "排除ip段，多个以英文逗号分隔",
+          "type": "string",
+        },
+        "num": {
+          "description": "需要购买的子账号数量。范围：1-300之间",
+          "type": "integer",
+        },
+        "product_type_id": {
+          "description": "产品类型：2=静态住宅（普通），3=静态住宅（原生），4=静态住宅（运营商原生），8=数据中心",
+          "enum": [
+            2,
+            3,
+            4,
+            8,
+          ],
+          "type": "integer",
+        },
+        "random_account_password": {
+          "description": "是否生成随机账号密码:0=否,1=是(默认为0)",
+          "type": "integer",
+        },
+        "remark": {
+          "description": "创建的子账号备注",
+          "type": "string",
+        },
+        "timelen": {
+          "description": "时长计费类型：0=7天，1=30天，2=90天，3=180天，4=360天，5=3天",
+          "type": "integer",
+        },
+        "use_ip_port": {
+          "description": "是否开启ip端口连接:0=不开启,1=开启(默认为0)",
+          "type": "integer",
+        },
+      },
+      "required": [
+        "product_type_id",
+        "num",
+        "timelen",
+        "agree",
+        "country",
+      ],
+      "type": "object",
+    },
+    "method": "POST",
+    "name": "order_buy_time_ip",
+    "path": "/externalapi/product_order/createProductBuyOrder",
+    "readOnly": false,
+    "title": "购买时长 IP",
+  },
+  {
+    "description": "为某个订单下的时长类子账号申请退单；不同订单的子账号请分别调用。",
+    "destructive": false,
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "ids": {
+          "items": {
+            "description": "子账号id，对应子账号列表里的id",
+            "type": "string",
+          },
+          "type": "array",
+        },
+        "order_product_buy_id": {
+          "description": "订单id，对应子账号列表里的order_product_buy_id",
+          "type": "integer",
+        },
+        "remark": {
+          "description": "退单备注",
+          "type": "string",
+        },
+      },
+      "required": [
+        "order_product_buy_id",
+        "ids",
+      ],
+      "type": "object",
+    },
+    "method": "POST",
+    "name": "order_refund_apply",
+    "path": "/externalapi/order_back/createOrderBack",
+    "readOnly": false,
+    "title": "申请退单",
+  },
+  {
+    "description": "会从账户余额扣费。为时长类子账号续费，sub_account_ids 为逗号分隔的子账号 id。",
+    "destructive": true,
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "product_type_id": {
+          "description": "产品类型：2=静态住宅（普通），3=静态住宅（原生），4=静态住宅（运营商原生），8=数据中心",
+          "enum": [
+            2,
+            3,
+            4,
+            8,
+          ],
+          "type": "integer",
+        },
+        "renew_with_bandwidth": {
+          "description": "续费时是否包含带宽:0=不包含,1=包含",
+          "type": "integer",
+        },
+        "sub_account_ids": {
+          "description": "续费的子账号id，多个以英文逗号连接",
+          "type": "string",
+        },
+        "timelen": {
+          "description": "时长计费类型：0=7天，1=30天，2=90天，3=180天，4=360天",
+          "type": "integer",
+        },
+      },
+      "required": [
+        "product_type_id",
+        "timelen",
+        "sub_account_ids",
+      ],
+      "type": "object",
+    },
+    "method": "POST",
+    "name": "order_renew",
+    "path": "/externalapi/product_order/createRenewProductBuyOrder",
+    "readOnly": false,
+    "title": "续费时长 IP",
+  },
+  {
+    "description": "查询平台产品信息列表。",
+    "destructive": false,
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {},
+      "required": [],
+      "type": "object",
+    },
+    "method": "GET",
+    "name": "product_list",
+    "path": "/externalapi/conpons/getProductList",
+    "readOnly": true,
+    "title": "产品信息",
+  },
+  {
+    "description": "查询当前账号各产品的单价、折扣和按国家的自定义价。data 按产品 ID 分组；时长类产品按 7/30/90/180/360 天档位返回 originUnitPrice、userUnitPrice、percent。",
+    "destructive": false,
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {},
+      "required": [],
+      "type": "object",
+    },
+    "method": "GET",
+    "name": "product_unit_price",
+    "path": "/externalapi/product_price/getProductUnitPrice",
+    "readOnly": true,
+    "title": "产品单价",
+  },
+  {
+    "description": "查询时长类产品某国家下可购买的城市。",
+    "destructive": false,
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "country_code": {
+          "description": "国家code。可从静态住宅（普通非原生）国家列表获取。country_id 和 country_code 二选一。国家用 ISO 3166-1 二字码，如 US",
+          "type": "string",
+        },
+        "country_id": {
+          "description": "国家id。可从静态住宅（普通非原生）国家列表获取。country_id 和 country_code 二选一",
+          "type": "string",
+        },
+        "product_type_id": {
+          "description": "产品类型：2=静态住宅（普通），3=静态住宅（原生），4=静态住宅（运营商原生），8=数据中心",
+          "enum": [
+            2,
+            3,
+            4,
+            8,
+          ],
+          "type": "integer",
+        },
+      },
+      "required": [
+        "product_type_id",
+      ],
+      "type": "object",
+    },
+    "method": "GET",
+    "name": "static_city_list",
+    "path": "/externalapi/inventory/cityList",
+    "readOnly": true,
+    "title": "时长产品城市列表",
+  },
+  {
+    "description": "查询时长类产品（静态住宅 2/3/4、数据中心 8）可购买的国家及编码。",
+    "destructive": false,
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "product_type_id": {
+          "description": "产品类型：2=静态住宅（普通），3=静态住宅（原生），4=静态住宅（运营商原生），8=数据中心",
+          "enum": [
+            2,
+            3,
+            4,
+            8,
+          ],
+          "type": "integer",
+        },
+      },
+      "required": [
+        "product_type_id",
+      ],
+      "type": "object",
+    },
+    "method": "GET",
+    "name": "static_country_list",
+    "path": "/externalapi/inventory/countryList",
+    "readOnly": true,
+    "title": "时长产品国家列表",
+  },
+  {
+    "description": "分页查询时长类产品可指定的 IP 段，供下单时的 appoint_ip 使用。",
+    "destructive": false,
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "city_code": {
+          "description": "城市code",
+          "type": "string",
+        },
+        "country_code": {
+          "description": "国家code。国家用 ISO 3166-1 二字码，如 US",
+          "type": "string",
+        },
+        "exclude_ip_str": {
+          "description": "需要排除掉的ip段，多个以英文逗号分隔",
+          "type": "string",
+        },
+        "ip_str": {
+          "description": "需要查询的ip段前缀",
+          "type": "string",
+        },
+        "page": {
+          "description": "分页",
+          "type": "integer",
+        },
+        "pagesize": {
+          "description": "数量，最大 100",
+          "type": "integer",
+        },
+        "product_type_id": {
+          "description": "产品类型：2=静态住宅（普通），3=静态住宅（原生），4=静态住宅（运营商原生），8=数据中心",
+          "enum": [
+            2,
+            3,
+            4,
+            8,
+          ],
+          "type": "integer",
+        },
+      },
+      "required": [
+        "product_type_id",
+      ],
+      "type": "object",
+    },
+    "method": "GET",
+    "name": "static_ip_range_list",
+    "path": "/externalapi/inventory/ipStrList",
+    "readOnly": true,
+    "title": "时长产品 IP 段列表",
+  },
+  {
+    "description": "查询时长类产品某国家各地区的库存详情。",
+    "destructive": false,
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "country_code": {
+          "description": "国家code。可从静态住宅（普通非原生）国家列表获取。国家用 ISO 3166-1 二字码，如 US",
+          "type": "string",
+        },
+        "product_type_id": {
+          "description": "产品类型：2=静态住宅（普通），3=静态住宅（原生），4=静态住宅（运营商原生），8=数据中心",
+          "enum": [
+            2,
+            3,
+            4,
+            8,
+          ],
+          "type": "integer",
+        },
+      },
+      "required": [
+        "product_type_id",
+        "country_code",
+      ],
+      "type": "object",
+    },
+    "method": "GET",
+    "name": "static_region_stock",
+    "path": "/externalapi/inventory/getBuyProductSku",
+    "readOnly": true,
+    "title": "时长产品地区库存",
+  },
+  {
+    "description": "购买时长 IP 前检测库存是否满足，不下单、不扣费。参数与 order_buy_time_ip 一致。",
+    "destructive": false,
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "appoint_ip": {
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "count": {
+                "description": "数量",
+                "type": "integer",
+              },
+              "ip_str": {
+                "description": "指定段",
+                "type": "string",
+              },
+            },
+            "type": "object",
+          },
+          "type": "array",
+        },
+        "bandwidth_num": {
+          "description": "带宽值",
+          "type": "integer",
+        },
+        "city": {
+          "description": "静态住宅城市名称。在静态住宅（运营商原生）城市列表可获取城市名称。不传默认随机。",
+          "type": "string",
+        },
+        "country": {
+          "description": "静态住宅国家编码code，例如：US。可从静态住宅（运营商原生）国家列表获取。国家用 ISO 3166-1 二字码，如 US",
+          "type": "string",
+        },
+        "exclude_ip_str": {
+          "description": "排除ip段，多个以英文逗号分隔",
+          "type": "string",
+        },
+        "num": {
+          "description": "需要购买的子账号数量。范围：1-300之间",
+          "type": "integer",
+        },
+        "product_type_id": {
+          "description": "产品类型：2=静态住宅（普通），3=静态住宅（原生），4=静态住宅（运营商原生），8=数据中心",
+          "enum": [
+            2,
+            3,
+            4,
+            8,
+          ],
+          "type": "integer",
+        },
+        "random_account_password": {
+          "description": "是否生成随机账号密码:0=否,1=是(默认为0)",
+          "type": "integer",
+        },
+        "remark": {
+          "description": "创建的子账号备注",
+          "type": "string",
+        },
+        "timelen": {
+          "description": "时长计费类型：0=7天，1=30天，2=90天，3=180天，4=360天，5=3天",
+          "type": "integer",
+        },
+        "use_ip_port": {
+          "description": "是否开启ip端口连接:0=不开启,1=开启(默认为0)",
+          "type": "integer",
+        },
+      },
+      "required": [
+        "product_type_id",
+        "num",
+        "timelen",
+        "country",
+      ],
+      "type": "object",
+    },
+    "method": "GET",
+    "name": "stock_check",
+    "path": "/externalapi/product_order/checkInventory",
+    "readOnly": true,
+    "title": "下单前库存检测",
+  },
+  {
+    "description": "为动态住宅流量产品（1 或 6）新增子账号，不扣费。",
+    "destructive": false,
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "agree": {
+          "description": "协议：SOCKS5，HTTP，HTTPS。产品 6 下必填",
+          "type": "string",
+        },
+        "changeInterval": {
+          "description": "IP切换周期，5-120分钟可选",
+          "type": "integer",
+        },
+        "country": {
+          "description": "国家编码，例如：US。从动态住宅（包月）国家列表获取。国家用 ISO 3166-1 二字码，如 US",
+          "type": "string",
+        },
+        "limit_flow": {
+          "description": "流量上限",
+          "type": "integer",
+        },
+        "num": {
+          "description": "需要生成的子账号数量",
+          "type": "integer",
+        },
+        "product_type_id": {
+          "description": "产品类型：1=动态住宅流量（不限时长），6=动态住宅流量（包月）",
+          "enum": [
+            1,
+            6,
+          ],
+          "type": "integer",
+        },
+        "url": {
+          "description": "业务网址",
+          "type": "string",
+        },
+        "use_random_username": {
+          "description": "创建时是否使用随机账号和密码。0=不使用，1=使用",
+          "type": "integer",
+        },
+      },
+      "required": [
+        "product_type_id",
+        "num",
+        "changeInterval",
+        "country",
+      ],
+      "type": "object",
+    },
+    "method": "POST",
+    "name": "sub_account_add",
+    "path": "/externalapi/device/accountAdd",
+    "readOnly": false,
+    "title": "新增动态子账号",
+  },
+  {
+    "description": "不可恢复。删除一个动态子账号。",
+    "destructive": true,
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "description": "子账号id",
+          "type": "string",
+        },
+        "product_type_id": {
+          "description": "产品类型：1=动态住宅流量（不限时长），6=动态住宅流量（包月）",
+          "enum": [
+            1,
+            6,
+          ],
+          "type": "integer",
+        },
+      },
+      "required": [
+        "product_type_id",
+        "id",
+      ],
+      "type": "object",
+    },
+    "method": "POST",
+    "name": "sub_account_delete",
+    "path": "/externalapi/device/accountDelete",
+    "readOnly": false,
+    "title": "删除单个子账号",
+  },
+  {
+    "description": "不可恢复。批量删除动态子账号，ids 为逗号分隔的子账号 id。",
+    "destructive": true,
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "ids": {
+          "description": "子账号id集，以英文逗号连接",
+          "type": "string",
+        },
+        "product_type_id": {
+          "description": "产品类型：1=动态住宅流量（不限时长），6=动态住宅流量（包月）",
+          "enum": [
+            1,
+            6,
+          ],
+          "type": "integer",
+        },
+      },
+      "required": [
+        "product_type_id",
+        "ids",
+      ],
+      "type": "object",
+    },
+    "method": "POST",
+    "name": "sub_account_delete_batch",
+    "path": "/externalapi/device/accountDeleteList",
+    "readOnly": false,
+    "title": "批量删除子账号",
+  },
+  {
+    "description": "查询动态住宅流量子账号某个月的流量消耗。仅支持按月查询；同一账号 1 分钟内最多查询 30 个不同子账号。",
+    "destructive": false,
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "month": {
+          "description": "查询月份",
+          "type": "string",
+        },
+        "product_type_id": {
+          "description": "产品类型：1=动态住宅流量（不限时长），6=动态住宅流量（包月）",
+          "enum": [
+            1,
+            6,
+          ],
+          "type": "integer",
+        },
+        "subAccount": {
+          "description": "子账号id",
+          "type": "integer",
+        },
+      },
+      "required": [
+        "product_type_id",
+        "subAccount",
+        "month",
+      ],
+      "type": "object",
+    },
+    "method": "GET",
+    "name": "sub_account_flow_query",
+    "path": "/externalapi/device/subAccountFlowQuery",
+    "readOnly": true,
+    "title": "动态子账号月度流量",
+  },
+  {
+    "description": "查询动态子账号的流量上限设置与已用量。",
+    "destructive": false,
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "description": "子账号 id",
+          "type": "integer",
+        },
+        "product_type_id": {
+          "description": "产品类型：1=动态住宅流量（不限时长），6=动态住宅流量（包月）",
+          "enum": [
+            1,
+            6,
+          ],
+          "type": "integer",
+        },
+      },
+      "required": [
+        "product_type_id",
+        "id",
+      ],
+      "type": "object",
+    },
+    "method": "GET",
+    "name": "sub_account_limit_flow",
+    "path": "/externalapi/tool/accountLimitFlow",
+    "readOnly": true,
+    "title": "子账号流量上限",
+  },
+  {
+    "description": "分页查询子账号，覆盖全部产品类型；返回用户名、密码、端口、协议、国家、流量等。",
+    "destructive": false,
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "country": {
+          "description": "静态住宅国家编码code，例如：US。可从静态住宅（普通非原生）国家列表获取。国家用 ISO 3166-1 二字码，如 US",
+          "type": "string",
+        },
+        "exportIp": {
+          "description": "出口IP,支持模糊查询",
+          "type": "string",
+        },
+        "ids": {
+          "description": "子账号id集合，多个以英文逗号连接",
+          "type": "string",
+        },
+        "page": {
+          "description": "当前页数",
+          "type": "integer",
+        },
+        "pagesize": {
+          "description": "每页显示数量。每页最大100条数据",
+          "type": "integer",
+        },
+        "product_type_id": {
+          "description": "产品类型：1=动态住宅流量（不限时长），2=静态住宅（普通），3=静态住宅（原生），4=静态住宅（运营商原生），6=动态住宅流量（包月），8=数据中心",
+          "enum": [
+            1,
+            2,
+            3,
+            4,
+            6,
+            8,
+          ],
+          "type": "integer",
+        },
+        "remark": {
+          "description": "子账号备注(模糊匹配)",
+          "type": "string",
+        },
+        "searchArr": {
+          "items": {
+            "description": "搜索数组,单次最多100条",
+            "type": "string",
+          },
+          "type": "array",
+        },
+        "search_type": {
+          "description": "批量搜索类型(精准匹配):0=自定义账密;1=出口ip;2=备注",
+          "type": "integer",
+        },
+        "subAccountEnd": {
+          "description": "子账号区间搜索[结束]",
+          "type": "integer",
+        },
+        "subAccountName": {
+          "description": "自定义用户名",
+          "type": "string",
+        },
+        "subAccountStart": {
+          "description": "子账号区间搜索[初始]",
+          "type": "integer",
+        },
+      },
+      "required": [
+        "product_type_id",
+        "page",
+        "pagesize",
+      ],
+      "type": "object",
+    },
+    "method": "GET",
+    "name": "sub_account_list",
+    "path": "/externalapi/device/accountList",
+    "readOnly": true,
+    "title": "子账号列表",
+  },
+  {
+    "description": "批量给子账号设置自定义用户名和密码，只能用字母和数字，长度 8-30 位。",
+    "destructive": false,
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "content": {
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "customPassword": {
+                "description": "自定义密码。只能是大小字母和数字。长度8-30个字符之间",
+                "type": "string",
+              },
+              "customUsername": {
+                "description": "自定义用户名。只能是大小字母和数字。长度8-30个字符之间",
+                "type": "string",
+              },
+              "id": {
+                "description": "子账号id",
+                "type": "integer",
+              },
+            },
+            "required": [
+              "id",
+              "customUsername",
+              "customPassword",
+            ],
+            "type": "object",
+          },
+          "type": "array",
+        },
+        "product_type_id": {
+          "description": "产品类型：1=动态住宅流量（不限时长），2=静态住宅（普通），3=静态住宅（原生），4=静态住宅（运营商原生），6=动态住宅流量（包月），8=数据中心",
+          "enum": [
+            1,
+            2,
+            3,
+            4,
+            6,
+            8,
+          ],
+          "type": "integer",
+        },
+      },
+      "required": [
+        "product_type_id",
+        "content",
+      ],
+      "type": "object",
+    },
+    "method": "POST",
+    "name": "sub_account_set_credentials",
+    "path": "/externalapi/device/batchUpdateSubAccountUsernamePassword",
+    "readOnly": false,
+    "title": "自定义子账号账密",
+  },
+  {
+    "description": "为动态子账号设置流量上限；limit_flow 为 0 表示取消限制。",
+    "destructive": false,
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "description": "子账号id",
+          "type": "integer",
+        },
+        "limit_flow": {
+          "description": "流量上限，单位 GB，0 到 1000000；0 = 取消限制并删除限流记录",
+          "type": "integer",
+        },
+        "product_type_id": {
+          "description": "产品类型：1=动态住宅流量（不限时长），6=动态住宅流量（包月）",
+          "enum": [
+            1,
+            6,
+          ],
+          "type": "integer",
+        },
+        "timelen": {
+          "description": "周期：0 天、1 周、2 月、3 季度、4 年；type=1 时必填，type=0 时忽略",
+          "enum": [
+            0,
+            1,
+            2,
+            3,
+            4,
+          ],
+          "type": "integer",
+        },
+        "type": {
+          "description": "限流类型：0 = 永久，按子账号累计用量（默认）；1 = 周期",
+          "enum": [
+            0,
+            1,
+          ],
+          "type": "integer",
+        },
+      },
+      "required": [
+        "product_type_id",
+        "id",
+        "limit_flow",
+      ],
+      "type": "object",
+    },
+    "method": "POST",
+    "name": "sub_account_set_limit_flow",
+    "path": "/externalapi/tool/accountLimitFlowEdit",
+    "readOnly": false,
+    "title": "设置子账号流量上限",
+  },
+  {
+    "description": "批量开启或关闭时长类子账号的 IP 端口直连，ids 为逗号分隔的子账号 id。",
+    "destructive": false,
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "ids": {
+          "description": "子账号id集合,多个以英文逗号分隔",
+          "type": "string",
+        },
+        "product_type_id": {
+          "description": "产品类型：2=静态住宅（普通），3=静态住宅（原生），4=静态住宅（运营商原生）",
+          "enum": [
+            2,
+            3,
+            4,
+          ],
+          "type": "integer",
+        },
+        "use_ip_port": {
+          "description": "直连开关状态:0=关闭,1=开启",
+          "type": "integer",
+        },
+      },
+      "required": [
+        "product_type_id",
+        "ids",
+        "use_ip_port",
+      ],
+      "type": "object",
+    },
+    "method": "POST",
+    "name": "sub_account_toggle_direct",
+    "path": "/externalapi/device/portEnableUpdateList",
+    "readOnly": false,
+    "title": "批量开关直连",
+  },
+  {
+    "description": "修改单个子账号的备注。",
+    "destructive": false,
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "description": "子账号id",
+          "type": "integer",
+        },
+        "product_type_id": {
+          "description": "产品类型：1=动态住宅流量（不限时长），6=动态住宅流量（包月）",
+          "enum": [
+            1,
+            6,
+          ],
+          "type": "integer",
+        },
+        "remark": {
+          "description": "备注",
+          "type": "string",
+        },
+      },
+      "required": [
+        "product_type_id",
+        "id",
+      ],
+      "type": "object",
+    },
+    "method": "POST",
+    "name": "sub_account_update",
+    "path": "/externalapi/device/accountUpdate",
+    "readOnly": false,
+    "title": "修改子账号备注",
+  },
+  {
+    "description": "批量修改多个子账号的备注，ids 为逗号分隔的子账号 id。",
+    "destructive": false,
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "ids": {
+          "description": "子账号id集，以英文逗号连接",
+          "type": "string",
+        },
+        "product_type_id": {
+          "description": "产品类型：1=动态住宅流量（不限时长），6=动态住宅流量（包月）",
+          "enum": [
+            1,
+            6,
+          ],
+          "type": "integer",
+        },
+        "remark": {
+          "description": "备注",
+          "type": "string",
+        },
+      },
+      "required": [
+        "product_type_id",
+        "ids",
+      ],
+      "type": "object",
+    },
+    "method": "POST",
+    "name": "sub_account_update_batch",
+    "path": "/externalapi/device/accountUpdateList",
+    "readOnly": false,
+    "title": "批量修改子账号备注",
+  },
+  {
+    "description": "查询当前账号的基本信息与余额。",
+    "destructive": false,
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {},
+      "required": [],
+      "type": "object",
+    },
+    "method": "GET",
+    "name": "user_info",
+    "path": "/externalapi/user/getUserInfo",
+    "readOnly": true,
+    "title": "账号信息",
+  },
+]
+`;

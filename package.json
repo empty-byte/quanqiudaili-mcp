@@ -1,0 +1,28 @@
+{
+  "name": "quanqiudaili-mcp",
+  "version": "0.1.0",
+  "description": "全球代理 externalapi 的 MCP 服务器：query 只读 / manage 管理",
+  "type": "module",
+  "private": true,
+  "bin": { "quanqiudaili-mcp": "dist/src/index.js" },
+  "files": ["dist/src", "spec/tools.json", "spec/dynamic-proxy-session.md"],
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "prepare": "npm run build",
+    "test": "npm run build && vitest run",
+    "sync-docs": "tsx scripts/sync-docs.ts",
+    "build-spec": "tsx scripts/build-spec.ts"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/server": "^2.1.0"
+  },
+  "devDependencies": {
+    "@modelcontextprotocol/client": "^2.1.0",
+    "@types/node": "^22",
+    "tsx": "^4.23",
+    "typescript": "^5.9",
+    "vitest": "^5",
+    "yaml": "^2.9"
+  }
+}

@@ -1,0 +1,226 @@
+# 路径 → 工具名、中文描述、标注、拆分与参数修正。人工维护。
+# "文档缺陷兜底" 条目在文档站修好后删除。
+ignore:
+  - /externalapi/user/login
+  - /externalapi/user/logout
+  - /externalapi/token/check
+  - /externalapi/token/refresh
+
+tools:
+  # ===== 只读：query 与 manage 都注册 =====
+  /externalapi/user/getUserInfo:
+    name: user_info
+    title: 账号信息
+    description: 查询当前账号的基本信息与余额。
+    readOnly: true
+  /externalapi/product_price/getProductUnitPrice:
+    name: product_unit_price
+    title: 产品单价
+    description: 查询当前账号各产品的单价、折扣和按国家的自定义价。data 按产品 ID 分组；时长类产品按 7/30/90/180/360 天档位返回 originUnitPrice、userUnitPrice、percent。
+    readOnly: true
+  /externalapi/conpons/getProductList:
+    name: product_list
+    title: 产品信息
+    description: 查询平台产品信息列表。
+    readOnly: true
+  /externalapi/common/countryList:
+    name: dynamic_country_list
+    title: 动态产品国家列表
+    description: 查询动态住宅流量产品（product_type_id 1 或 6）可选的国家及编码。
+    readOnly: true
+    params: # 文档缺陷兜底：包月那页把"此处固定类别为"也写成 1
+      product_type_id: { enum: [1, 6] }
+  /externalapi/common/stateList:
+    name: dynamic_state_list
+    title: 动态产品州/省列表
+    description: 查询动态住宅流量产品某国家下可选的州或省。
+    readOnly: true
+    params: # 文档只有不限时长一页，后端对 1 和 6 都放行
+      product_type_id: { enum: [1, 6] }
+  /externalapi/common/cityList:
+    name: dynamic_city_list
+    title: 动态产品城市列表
+    description: 查询动态住宅流量产品某国家下可选的城市。
+    readOnly: true
+  /externalapi/inventory/countryList:
+    name: static_country_list
+    title: 时长产品国家列表
+    description: 查询时长类产品（静态住宅 2/3/4、数据中心 8）可购买的国家及编码。
+    readOnly: true
+  /externalapi/inventory/cityList:
+    name: static_city_list
+    title: 时长产品城市列表
+    description: 查询时长类产品某国家下可购买的城市。
+    readOnly: true
+  /externalapi/inventory/getBuyProductSku:
+    name: static_region_stock
+    title: 时长产品地区库存
+    description: 查询时长类产品某国家各地区的库存详情。
+    readOnly: true
+    params: # 文档缺陷兜底：只有产品 2 那页把 country_code 标为必填，后端对所有产品都要求
+      country_code: { required: true }
+  /externalapi/inventory/ipStrList:
+    name: static_ip_range_list
+    title: 时长产品 IP 段列表
+    description: 分页查询时长类产品可指定的 IP 段，供下单时的 appoint_ip 使用。
+    readOnly: true
+    params: # 工具管理下那页没写固定产品，枚举按后端校验规则给；有一页把 page 写成 array
+      product_type_id: { enum: [2, 3, 4, 8] }
+      page: { type: integer }
+      pagesize: { type: integer }
+  /externalapi/product_order/checkInventory:
+    name: stock_check
+    title: 下单前库存检测
+    description: 购买时长 IP 前检测库存是否满足，不下单、不扣费。参数与 order_buy_time_ip 一致。
+    readOnly: true
+    params: # 文档只有 2/3/4 三页，后端同样接受 8
+      product_type_id: { enum: [2, 3, 4, 8] }
+      "appoint_ip[0][count]": { type: integer }
+  /externalapi/device/accountList:
+    name: sub_account_list
+    title: 子账号列表
+    description: 分页查询子账号，覆盖全部产品类型；返回用户名、密码、端口、协议、国家、流量等。
+    readOnly: true
+  /externalapi/device/subAccountFlowQuery:
+    name: sub_account_flow_query
+    title: 动态子账号月度流量
+    description: 查询动态住宅流量子账号某个月的流量消耗。仅支持按月查询；同一账号 1 分钟内最多查询 30 个不同子账号。
+    readOnly: true
+  /externalapi/tool/accountLimitFlow:
+    name: sub_account_limit_flow
+    title: 子账号流量上限
+    description: 查询动态子账号的流量上限设置与已用量。
+    readOnly: true
+    params: # 文档缺陷兜底：两页都把 id 写成 string、非必填、无描述
+      id: { type: integer, required: true, description: 子账号 id }
+  /externalapi/bandwidth/getBandwidthList:
+    name: bandwidth_package_list
+    title: 带宽套餐列表
+    description: 查询时长类产品可购买的带宽套餐。
+    readOnly: true
+    params:
+      product_type_id: { enum: [2, 3, 4, 8] }
+  /externalapi/bandwidth/monitoringList:
+    name: bandwidth_monitoring_list
+    title: 带宽监控列表
+    description: 查询时长类子账号的带宽监控数据。
+    readOnly: true
+    params:
+      product_type_id: { enum: [2, 3, 4, 8] }
+  /externalapi/bandwidth/monitoringTrend:
+    name: bandwidth_trend
+    title: 子账号带宽趋势
+    description: 查询单个时长类子账号在一段时间内的带宽使用趋势。
+    readOnly: true
+    params:
+      product_type_id: { enum: [2, 3, 4, 8] }
+  /externalapi/bandwidth/bandwidthNumDetail:
+    name: bandwidth_detail
+    title: 有效期内带宽详情
+    description: 查询子账号剩余有效期内已购带宽的详情。
+    readOnly: true
+    params:
+      product_type_id: { enum: [2, 3, 4, 8] }
+  /externalapi/product_price/bandwidthUpgradePrice:
+    name: bandwidth_upgrade_price
+    title: 带宽升级价格试算
+    description: 计算为子账号升级带宽需要的费用，不下单、不扣费。下单请用 order_bandwidth_upgrade。
+    readOnly: true
+    params:
+      product_type_id: { enum: [2, 3, 4, 8] }
+      "sub_accounts[]": { required: true }
+      bandwidth_num: { type: integer, required: true }
+
+  # ===== 写操作：仅 manage =====
+  /externalapi/device/accountAdd:
+    name: sub_account_add
+    title: 新增动态子账号
+    description: 为动态住宅流量产品（1 或 6）新增子账号，不扣费。
+  /externalapi/device/accountUpdate:
+    name: sub_account_update
+    title: 修改子账号备注
+    description: 修改单个子账号的备注。
+  /externalapi/device/accountUpdateList:
+    name: sub_account_update_batch
+    title: 批量修改子账号备注
+    description: 批量修改多个子账号的备注，ids 为逗号分隔的子账号 id。
+    params: # 文档缺陷兜底：remark 的描述写成了 "test"
+      remark: { description: 备注 }
+  /externalapi/device/batchUpdateSubAccountUsernamePassword:
+    name: sub_account_set_credentials
+    title: 自定义子账号账密
+    description: 批量给子账号设置自定义用户名和密码，只能用字母和数字，长度 8-30 位。
+    params:
+      product_type_id: { type: integer }
+      "content[0][id]": { type: integer }
+      "content[1][id]": { type: integer }
+  /externalapi/device/portEnableUpdateList:
+    name: sub_account_toggle_direct
+    title: 批量开关直连
+    description: 批量开启或关闭时长类子账号的 IP 端口直连，ids 为逗号分隔的子账号 id。
+  /externalapi/tool/accountLimitFlowEdit:
+    name: sub_account_set_limit_flow
+    title: 设置子账号流量上限
+    description: 为动态子账号设置流量上限；limit_flow 为 0 表示取消限制。
+    params: # 文档缺陷兜底：新页全部为 string，type 的描述有误
+      id: { type: integer }
+      limit_flow: { type: integer, description: 流量上限，单位 GB，0 到 1000000；0 = 取消限制并删除限流记录 }
+      type: { type: integer, enum: [0, 1], description: 限流类型：0 = 永久，按子账号累计用量（默认）；1 = 周期 }
+      timelen: { type: integer, enum: [0, 1, 2, 3, 4], description: 周期：0 天、1 周、2 月、3 季度、4 年；type=1 时必填，type=0 时忽略 }
+  /externalapi/device/accountDelete:
+    name: sub_account_delete
+    title: 删除单个子账号
+    description: 不可恢复。删除一个动态子账号。
+    destructive: true
+  /externalapi/device/accountDeleteList:
+    name: sub_account_delete_batch
+    title: 批量删除子账号
+    description: 不可恢复。批量删除动态子账号，ids 为逗号分隔的子账号 id。
+    destructive: true
+  /externalapi/product_order/createProductBuyOrder:
+    split:
+      - name: order_buy_dynamic
+        productTypeIds: [1, 6]
+        title: 购买动态住宅流量
+        description: 会从账户余额扣费。购买动态住宅流量：产品 1 按 GB 购买，num 为 GB 数（1-1024）；产品 6 为包月，bill_timelen 指定月数。下单前先用 product_unit_price 查价、user_info 查余额，并向用户确认。
+        destructive: true
+        params:
+          bill_timelen: { description: 包月有效时长：1=30天，2=90天，3=180天；产品 6 必填，产品 1 忽略 }
+      - name: order_buy_time_ip
+        productTypeIds: [2, 3, 4, 8]
+        title: 购买时长 IP
+        description: 会从账户余额扣费。购买静态住宅（2/3/4）或数据中心（8）时长 IP，num 为 IP 数量（1-300）。下单前先用 stock_check 检测库存、product_unit_price 查价，并向用户确认。
+        destructive: true
+        params:
+          "appoint_ip[0][count]": { type: integer }
+  /externalapi/product_order/createTestOrder:
+    name: order_buy_test_ip
+    title: 购买时长测试 IP
+    description: 会从账户余额按时长扣费。购买短期测试用的时长 IP，用于自有平台给用户试用。
+    destructive: true
+  /externalapi/product_order/createRenewProductBuyOrder:
+    name: order_renew
+    title: 续费时长 IP
+    description: 会从账户余额扣费。为时长类子账号续费，sub_account_ids 为逗号分隔的子账号 id。
+    destructive: true
+    params: # 文档缺陷兜底：旧页只把 product_type_id 标为必填
+      timelen: { required: true }
+      sub_account_ids: { required: true }
+  /externalapi/product_order/createBandwidthUpgradeOrder:
+    name: order_bandwidth_upgrade
+    title: 带宽升级下单
+    description: 会从账户余额扣费。为时长类子账号升级带宽，先用 bandwidth_upgrade_price 试算并向用户确认。
+    destructive: true
+    fixed: { pay_method: balance }
+    drop: [pay_method]
+    params:
+      "subAccountIds[]": { required: true }
+      product_type_id: { enum: [2, 3, 4, 8] }
+      bandwidth_num: { type: integer, required: true }
+  /externalapi/order_back/createOrderBack:
+    name: order_refund_apply
+    title: 申请退单
+    description: 为某个订单下的时长类子账号申请退单；不同订单的子账号请分别调用。
+    params:
+      order_product_buy_id: { required: true }
+      "ids[]": { required: true }
