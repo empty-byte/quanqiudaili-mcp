@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildTools, loadOverrides, mergeGroup, parsePage, tokens, type Page, type ToolOverride } from '../scripts/lib/merge.js';
+import { buildTools, loadOverrides, mergeGroup, parsePage, placePages, tokens, type Page, type ToolOverride } from '../scripts/lib/merge.js';
 import type { JsonSchema } from '../src/types.js';
 
 type P = [name: string, required: boolean, type?: JsonSchema['type'], description?: string];
@@ -126,17 +126,48 @@ describe('parsePage', () => {
   it('提取 path、summary、固定产品类型，跳过 header 参数，合并 query 与 body', () => {
     const md = [
       '# 标题', '', '```yaml', 'openapi: 3.0.1', 'paths:', '  /externalapi/device/accountList:', '    get:', '      summary: 列表',
-      '      parameters:', '        - name: product_type_id', '          in: query', '          description: 产品类型id，此处固定类别为：1',
+      '      tags:', '        - 用户IP子账号管理/动态住宅流量子账号（不限时长）',
+      '      x-run-in-apifox: https://app.apifox.com/web/project/5275065/apis/api-222033931-run', '      parameters:', '        - name: product_type_id', '          in: query', '          description: 产品类型id，此处固定类别为：1',
       '          required: true', '          schema:', '            type: integer', '        - name: token', '          in: header',
       '          schema:', '            type: string', '      requestBody:', '        content:', '          application/x-www-form-urlencoded:',
       '            schema:', '              type: object', '              properties:', '                remark:', '                  type: string',
       '                  description: 备注', '              required:', '                - remark', '```', '',
     ].join('\n');
     const p = parsePage('1e0', md);
-    expect(p).toMatchObject({ id: '1e0', path: '/externalapi/device/accountList', summary: '列表', productTypeId: 1 });
+    expect(p).toMatchObject({ id: '1e0', path: '/externalapi/device/accountList', summary: '列表', productTypeId: 1, tag: '用户IP子账号管理/动态住宅流量子账号（不限时长）', apiId: '222033931' });
     expect(p.params).toEqual([
       { name: 'product_type_id', required: true, schema: { type: 'integer' }, description: '产品类型id，此处固定类别为：1' },
       { name: 'remark', required: true, schema: { type: 'string' }, description: '备注' },
+    ]);
+  });
+});
+
+describe('placePages', () => {
+  const p = (id: string, path: string, tag?: string, apiId?: string): Page => ({ id, path, summary: 's', tag, apiId, params: [] });
+  const files = (...pages: Page[]) => [...placePages(pages).keys()];
+
+  it('目录按文档站分组映射成英文名，产品分组带 product_type_id 前缀，文件名取接口路径，分组名里的空格忽略', () => {
+    expect(files(p('1e0', '/externalapi/device/accountList', '用户IP子账号管理/动态住宅流量子账号 （包月）'))).toEqual(['6-dynamic-monthly/device-accountList.md']);
+    expect(files(p('2e0', '/externalapi/order_back/createOrderBack', '用户IP子账号管理/静态住宅（运营商原生）时长子账号'))).toEqual(['4-static-isp-native/order_back-createOrderBack.md']);
+  });
+
+  it('非产品分组也走映射表', () => {
+    expect(files(p('3e0', '/externalapi/bandwidth/getBandwidthList', '增值带宽'))).toEqual(['bandwidth/bandwidth-getBandwidthList.md']);
+  });
+
+  it('未登记的分组报错', () => {
+    expect(() => files(p('4e0', '/externalapi/device/accountList', '用户IP子账号管理/移动住宅子账号'))).toThrow(/未登记的文档分组/);
+  });
+
+  it('同一分组同一接口有多页时都带 Apifox 页面 id 后缀', () => {
+    expect(files(
+      p('a', '/externalapi/product_order/createRenewProductBuyOrder', '用户IP子账号管理/数据中心时长子账号', '222489108'),
+      p('b', '/externalapi/product_order/createRenewProductBuyOrder', '用户IP子账号管理/数据中心时长子账号', '313083924'),
+      p('c', '/externalapi/device/accountList', '用户IP子账号管理/数据中心时长子账号', '222488896'),
+    )).toEqual([
+      '8-datacenter/product_order-createRenewProductBuyOrder.222489108.md',
+      '8-datacenter/product_order-createRenewProductBuyOrder.313083924.md',
+      '8-datacenter/device-accountList.md',
     ]);
   });
 });

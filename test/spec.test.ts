@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { generate } from '../scripts/build-spec.js';
+import { generate, loadPages } from '../scripts/build-spec.js';
+import { placePages } from '../scripts/lib/merge.js';
 
 const tools = generate();
 const byName = (n: string) => {
@@ -88,6 +89,12 @@ describe('spec/tools.json', () => {
 
   it('spec/tools.json 与当前生成结果一致（改了 overrides 要重新 npm run build-spec）', () => {
     expect(JSON.parse(readFileSync(new URL('../spec/tools.json', import.meta.url), 'utf8'))).toEqual(tools);
+  });
+
+  it('spec/pages 的目录与文件名符合 placePages 规则（sync-docs 按同一规则落盘，不要手动改名）', () => {
+    const pages = loadPages();
+    expect(pages).toHaveLength(85);
+    for (const [file, p] of placePages(pages)) expect(file, p.id).toBe(`${p.id}.md`);
   });
 
   it('完整快照', () => {

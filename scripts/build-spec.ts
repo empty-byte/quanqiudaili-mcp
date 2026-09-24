@@ -6,7 +6,8 @@ import { buildTools, loadOverrides, parsePage } from './lib/merge.js';
 const ROOT = new URL('../', import.meta.url);
 
 export function loadPages(dir: URL = new URL('spec/pages/', ROOT)) {
-  return readdirSync(dir)
+  return (readdirSync(dir, { recursive: true }) as string[])
+    .map(f => f.replaceAll('\\', '/'))
     .filter(f => f.endsWith('.md'))
     .sort()
     .map(f => parsePage(f.replace(/\.md$/, ''), readFileSync(new URL(f, dir), 'utf8')));

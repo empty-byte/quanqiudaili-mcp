@@ -2,8 +2,7 @@
 
 全球代理（quanqiudaili.com）对外 API 的 MCP 服务器。让 Claude Code、Claude Desktop 等 MCP 客户端可以查询子账号、库存、价格，并在你确认后下单、续费、改配置。
 
-- `query`：19 个只读工具，适合日常查询，装了它不会产生任何费用。
-- `manage`：全部 33 个工具，含下单扣费、续费、删除子账号。删除与扣费工具都带 `destructiveHint` 标注；支持该标注的客户端会在调用前要求确认，不支持的客户端不会，所以只在需要时启用 manage。
+默认暴露全部 33 个工具，含下单扣费、续费、删除子账号；加 `--readonly` 只暴露 19 个只读工具，装了不会产生任何费用。删除与扣费工具都带 `destructiveHint` 标注；支持该标注的客户端会在调用前要求确认，不支持的客户端不会，所以给不需要写操作的人配 `--readonly`。
 
 业务逻辑、参数校验、鉴权、扣费全部在后端完成，本项目只是一个 HTTP 客户端。
 
@@ -19,7 +18,7 @@ cd quanqiudaili-mcp
 npm ci
 ```
 
-`npm ci` 结束时会自动编译到 `dist/`。之后用 `node <安装目录>/dist/src/index.js query` 启动；也可以 `npm install -g .`，得到全局命令 `quanqiudaili-mcp query`。
+`npm ci` 结束时会自动编译到 `dist/`。启动命令是 `node <安装目录>/dist/src/index.js`，只读加 `--readonly`；也可以 `npm install -g .` 得到全局命令 `quanqiudaili-mcp`。
 
 ## 获取 token
 
@@ -48,11 +47,19 @@ token 过期后工具会返回"token 无效或已过期"，重新登录取新 to
 | `QQDL_BASE_URL` | 否 | `https://admin.quanqiudaili.com` | 指向测试环境时修改 |
 | `QQDL_TIMEOUT_MS` | 否 | `30000` | 单次请求超时（毫秒） |
 
-Claude Code（把 `<安装目录>` 换成实际路径，Windows 也用正斜杠，例如 `C:/tools/quanqiudaili-mcp`）：
+装一次之后，跑一条命令把所有客户端的配置片段打印出来，贴进你用的那个即可（只打印，不改任何文件）：
 
 ```bash
-claude mcp add quanqiudaili-query  -e QQDL_TOKEN=你的token -- node <安装目录>/dist/src/index.js query
-claude mcp add quanqiudaili-manage -e QQDL_TOKEN=你的token -- node <安装目录>/dist/src/index.js manage
+node <安装目录>/dist/src/index.js setup --token 你的token
+node <安装目录>/dist/src/index.js setup --token 你的token --readonly   # 只读版
+```
+
+输出里按客户端分段：Claude Code 与 Codex CLI 各一条可直接执行的命令，Claude Desktop、Cursor、Windsurf/Devin、VS Code、Zed 各给配置文件位置和 JSON 或 TOML 片段，最后一段是任何支持 stdio 的客户端都能用的标准 `mcpServers` JSON。路径会按你的操作系统和实际安装位置填好。
+
+两个最常用的示例（`<安装目录>` 换成实际路径，Windows 也用正斜杠，例如 `C:/tools/quanqiudaili-mcp`）。Claude Code：
+
+```bash
+claude mcp add -s user -e QQDL_TOKEN=你的token quanqiudaili -- node <安装目录>/dist/src/index.js
 ```
 
 Claude Desktop 的 `claude_desktop_config.json`：
@@ -60,22 +67,34 @@ Claude Desktop 的 `claude_desktop_config.json`：
 ```json
 {
   "mcpServers": {
-    "quanqiudaili-query": {
+    "quanqiudaili": {
       "command": "node",
-      "args": ["<安装目录>/dist/src/index.js", "query"],
+      "args": ["<安装目录>/dist/src/index.js"],
       "env": { "QQDL_TOKEN": "你的token" }
     }
   }
 }
 ```
 
-其它支持 stdio 的客户端同理：命令 `node`，参数 `<安装目录>/dist/src/index.js query|manage`，环境变量 `QQDL_TOKEN`。
+只读版在 `args` 末尾加 `"--readonly"`。
+
+注意：服务是被客户端当子进程拉起的，只继承一小份白名单环境变量，你在终端里 `export` 或 `$env:` 设置的 `QQDL_TOKEN` 传不进去，token 必须像上面那样写在客户端配置里。
+
+## 调试
+
+不接客户端、想直接看工具列表或手动调一个工具，用官方 Inspector，token 同样要通过它的 `-e` 传入：
+
+```bash
+npx @modelcontextprotocol/inspector -e QQDL_TOKEN=你的token -- node <安装目录>/dist/src/index.js
+```
+
+浏览器里点 Connect，Tools 页能看到全部工具、填参数、看返回。
 
 ## 工具清单
 
 产品类型 `product_type_id`：1 动态住宅流量（不限时长）、6 动态住宅流量（包月）、2 静态住宅（普通）、3 静态住宅（原生）、4 静态住宅（运营商原生）、8 数据中心。国家一律用 ISO 3166-1 二字码（如 `US`）。
 
-只读（query 与 manage 都有）：
+只读（`--readonly` 模式暴露的全部工具）：
 
 | 工具 | 说明 |
 |---|---|
@@ -93,7 +112,7 @@ Claude Desktop 的 `claude_desktop_config.json`：
 | bandwidth_package_list / bandwidth_monitoring_list / bandwidth_trend / bandwidth_detail | 带宽套餐、监控、趋势、详情 |
 | bandwidth_upgrade_price | 带宽升级价格试算，不扣费 |
 
-写操作（仅 manage）：
+写操作（默认模式才有，`--readonly` 不暴露）：
 
 | 工具 | 说明 |
 |---|---|

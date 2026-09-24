@@ -26,8 +26,10 @@ describe('cfgFromEnv', () => {
     expect(cfgFromEnv({ QQDL_TOKEN: ' abc \n', QQDL_BASE_URL: 'https://x.test/' }))
       .toEqual({ baseUrl: 'https://x.test', token: 'abc', timeoutMs: 30000 });
   });
-  it('缺 token 抛出带提示的错误', () => {
+  it('缺 token 抛出带提示的错误，并说明要写在客户端配置里', () => {
     expect(() => cfgFromEnv({})).toThrow(/QQDL_TOKEN/);
+    expect(() => cfgFromEnv({})).toThrow(/不继承终端/);
+    expect(() => cfgFromEnv({})).toThrow(/-e QQDL_TOKEN/);
   });
 });
 

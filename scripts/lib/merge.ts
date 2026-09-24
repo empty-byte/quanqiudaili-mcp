@@ -2,7 +2,7 @@ import { parse as parseYaml } from 'yaml';
 import type { JsonSchema, ToolDef } from '../../src/types.js';
 
 export interface RawParam { name: string; required: boolean; schema: JsonSchema; description: string }
-export interface Page { id: string; path: string; summary: string; productTypeId?: number; params: RawParam[] }
+export interface Page { id: string; path: string; summary: string; tag?: string; apiId?: string; productTypeId?: number; params: RawParam[] }
 export type ParamOverride = Partial<Omit<JsonSchema, 'required'>> & { required?: boolean };
 export interface ToolOverride {
   name: string;
@@ -51,7 +51,37 @@ export function parsePage(id: string, md: string): Page {
   }
   const pid = params.find(p => p.name === 'product_type_id');
   const fixed = pid?.description.match(/固定(?:类别)?为[：:]\s*(\d+)/);
-  return { id, path, summary: String(op.summary ?? '').trim(), productTypeId: fixed ? Number(fixed[1]) : undefined, params };
+  const tag = op.tags?.[0];
+  const apiId = String(op['x-run-in-apifox'] ?? '').match(/api-(\d+)-run/)?.[1];
+  return {
+    id, path, summary: String(op.summary ?? '').trim(), tag: tag === undefined ? undefined : String(tag), apiId,
+    productTypeId: fixed ? Number(fixed[1]) : undefined, params,
+  };
+}
+
+// 文档站左侧分组 → 目录名，产品分组带 product_type_id 前缀。有 19 页参数描述里没写"固定为 N"，但分组都归属明确，所以目录按分组走；
+// 文档站新增分组时这里会报错，补一行即可
+const TAG_DIR: Record<string, string> = {
+  '用户IP子账号管理/动态住宅流量子账号（不限时长）': '1-dynamic-no-expiry',
+  '用户IP子账号管理/动态住宅流量子账号（包月）': '6-dynamic-monthly',
+  '用户IP子账号管理/静态住宅（普通非原生）时长子账号': '2-static-standard',
+  '用户IP子账号管理/静态住宅（原生）时长子账号': '3-static-native',
+  '用户IP子账号管理/静态住宅（运营商原生）时长子账号': '4-static-isp-native',
+  '用户IP子账号管理/数据中心时长子账号': '8-datacenter',
+  'Token管理': 'token', '用户管理': 'user', '工具管理': 'tool', '增值带宽': 'bandwidth',
+};
+
+/** 全部页面在 spec/pages/ 下的位置：`分组目录/控制器-方法.md`；同一分组同一接口有多页时带上 Apifox 页面 id 区分 */
+export function placePages(pages: Page[]): Map<string, Page> {
+  const stems = pages.map(p => {
+    const tag = (p.tag ?? '').replace(/\s+/g, '');
+    const dir = TAG_DIR[tag];
+    if (!dir) throw new Error(`${p.id}: 未登记的文档分组「${tag}」，请在 TAG_DIR 补上目录名`);
+    return `${dir}/${p.path.replace(/^\/externalapi\//, '').replace(/\//g, '-')}`;
+  });
+  const count = new Map<string, number>();
+  for (const stem of stems) count.set(stem, (count.get(stem) ?? 0) + 1);
+  return new Map(pages.map((p, i) => [`${stems[i]}${count.get(stems[i])! > 1 ? `.${p.apiId ?? p.id}` : ''}.md`, p]));
 }
 
 function pick(s: Any): JsonSchema {

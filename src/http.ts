@@ -11,7 +11,10 @@ export interface Cfg {
 export function cfgFromEnv(env: NodeJS.ProcessEnv = process.env): Cfg {
   const token = (env.QQDL_TOKEN ?? '').trim();
   if (!token) {
-    throw new Error('缺少环境变量 QQDL_TOKEN。请先用账号密码调用 externalapi/user/login 取得 token，做法见 README。');
+    throw new Error(
+      '缺少环境变量 QQDL_TOKEN。请先用账号密码调用 externalapi/user/login 取得 token，做法见 README。' +
+        '客户端拉起本服务时不继承终端里的环境变量，token 要写在客户端配置里（如 claude mcp add -e QQDL_TOKEN=…），用 Inspector 调试时通过 -e 传入。',
+    );
   }
   const baseUrl = (env.QQDL_BASE_URL ?? 'https://admin.quanqiudaili.com').trim().replace(/\/+$/, '');
   const timeoutMs = Number(env.QQDL_TIMEOUT_MS ?? 30000);

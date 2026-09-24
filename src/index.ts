@@ -1,13 +1,31 @@
 #!/usr/bin/env node
 import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { McpServer, fromJsonSchema, type JsonSchemaType } from '@modelcontextprotocol/server';
 import { serveStdio } from '@modelcontextprotocol/server/stdio';
 import { callApi, cfgFromEnv, type Cfg } from './http.js';
+import { renderSetup } from './setup.js';
 import type { ToolDef } from './types.js';
 
-const mode = process.argv[2];
-if (mode !== 'query' && mode !== 'manage') {
-  console.error('用法：quanqiudaili-mcp <query|manage>\n  query   只读工具\n  manage  全部工具，含下单扣费与删除');
+const USAGE = `用法：quanqiudaili-mcp [--readonly]
+      quanqiudaili-mcp setup [--token 你的token] [--readonly]
+  不带参数     全部 33 个工具，含下单扣费与删除子账号
+  --readonly   只暴露 19 个只读工具
+  setup        打印 Claude Code、Claude Desktop、Codex、Cursor、VS Code、Zed、Windsurf 的配置片段，不改任何文件`;
+
+const argv = process.argv.slice(2);
+
+if (argv[0] === 'setup') {
+  const withEq = argv.find(a => a.startsWith('--token='));
+  const at = argv.indexOf('--token');
+  const token = withEq ? withEq.slice('--token='.length) : at >= 0 ? argv[at + 1] : undefined;
+  console.log(renderSetup({ indexPath: fileURLToPath(import.meta.url), token, readonly: argv.includes('--readonly'), platform: process.platform }));
+  process.exit(0);
+}
+
+const readonly = argv[0] === '--readonly' || argv[0] === 'query';
+if (argv.length > 1 || (argv.length === 1 && !readonly && argv[0] !== 'manage')) {
+  console.error(USAGE);
   process.exit(2);
 }
 
@@ -23,7 +41,7 @@ try {
 const read = (rel: string): string => readFileSync(new URL(rel, import.meta.url), 'utf8');
 const { version } = JSON.parse(read('../../package.json')) as { version: string };
 const all = JSON.parse(read('../../spec/tools.json')) as ToolDef[];
-const tools = mode === 'query' ? all.filter(t => t.readOnly) : all;
+const tools = readonly ? all.filter(t => t.readOnly) : all;
 
 const SESSION_URI = 'quanqiudaili://docs/dynamic-proxy-session';
 
@@ -35,7 +53,7 @@ const INSTRUCTIONS = `全球代理（quanqiudaili.com）externalapi 的 MCP 封�
 - 动态住宅代理连接串的写法（cty/st/ct/ss/tm/spec 参数）见资源 ${SESSION_URI}。`;
 
 function createServer(): McpServer {
-  const server = new McpServer({ name: `quanqiudaili-${mode}`, version }, { instructions: INSTRUCTIONS });
+  const server = new McpServer({ name: 'quanqiudaili-mcp', version }, { instructions: INSTRUCTIONS });
 
   for (const t of tools) {
     server.registerTool(
@@ -71,5 +89,5 @@ function createServer(): McpServer {
   return server;
 }
 
-if (mode === 'manage') console.error('[quanqiudaili-mcp] manage 模式：包含下单扣费与删除子账号的操作工具。');
+if (!readonly) console.error('[quanqiudaili-mcp] 当前包含下单扣费与删除子账号的操作工具；只想查询请加 --readonly。');
 serveStdio(createServer, { onerror: e => console.error(`[quanqiudaili-mcp] ${e.message}`) });
