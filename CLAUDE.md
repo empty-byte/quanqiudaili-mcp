@@ -15,7 +15,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `npm run sync-docs`：联网重新下载文档站全部接口页到 `spec/pages/`，随后自动 build-spec 并打印与上一版的差异。
 - 本机若装了 RTK hook，`npx vitest` 的输出会被改写成看不到结果，改用 `rtk proxy npm test` 或 `rtk proxy npx vitest run …`。
 - 运行：`node dist/src/index.js [--readonly] [--yes]`。环境变量 `QQDL_TOKEN`（必填）、`QQDL_BASE_URL`（默认线上）、`QQDL_TIMEOUT_MS`。
-- 配置片段：`node dist/src/index.js setup --token xxx [--readonly]`，打印 Claude Code、Claude Desktop、Codex、Cursor、VS Code、Zed、Windsurf 的配置，生成逻辑在 `src/setup.ts`（纯文本函数，有单测）。
+- 配置片段：`node dist/src/index.js setup --token xxx [--readonly] [--npx]`，打印 Claude Code、Claude Desktop、Codex、Cursor、VS Code、Zed、Windsurf 的配置，生成逻辑在 `src/setup.ts`（纯文本函数，有单测）。默认按本机路径生成 `node …/dist/src/index.js`，`--npx` 生成 `npx -y quanqiudaili-mcp`。
+- 发布：`npm publish`（`prepare` 会先构建，`files` 白名单只带 `dist/src`、`spec/tools.json`、`spec/dynamic-proxy-session.md`）。运行期从 `dist/src/index.js` 往上两级找包根，npx 安装与克隆安装的布局一致。
 - 调试：`npx @modelcontextprotocol/inspector -e QQDL_TOKEN=xxx -- node dist/src/index.js`。客户端拉起子进程时不继承终端环境变量，token 只能通过客户端配置或 Inspector 的 `-e` 传入。
 
 ## 架构：两条链路

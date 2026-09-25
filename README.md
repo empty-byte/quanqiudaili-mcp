@@ -12,6 +12,10 @@ Node.js 20 或更新（推荐当前 LTS）。Windows、macOS、Linux 均可。
 
 ## 安装
 
+两种方式任选一种。
+
+方式一，克隆仓库：
+
 ```bash
 git clone <仓库地址> quanqiudaili-mcp
 cd quanqiudaili-mcp
@@ -19,6 +23,8 @@ npm ci
 ```
 
 `npm ci` 结束时会自动编译到 `dist/`。启动命令是 `node <安装目录>/dist/src/index.js`，只读加 `--readonly`，自动化脚本加 `--yes` 跳过写操作确认；也可以 `npm install -g .` 得到全局命令 `quanqiudaili-mcp`。
+
+方式二，npx，不用克隆也不用装：客户端配置里把命令写成 `npx -y quanqiudaili-mcp`（npm 包名），客户端第一次拉起时自动从 npm 下载并缓存，之后直接复用，本机要能访问 npm 源。`--readonly`、`--yes` 照样跟在后面。Windows 下若客户端报找不到 npx，把 `command` 改成 `cmd`，`args` 最前面加 `"/c", "npx"`。
 
 ## 获取 token
 
@@ -45,6 +51,7 @@ Key 被删除或复制不完整时，工具会返回"token 无效"，到 API Key
 ```bash
 node <安装目录>/dist/src/index.js setup --token 你的token
 node <安装目录>/dist/src/index.js setup --token 你的token --readonly   # 只读版
+npx -y quanqiudaili-mcp setup --npx --token 你的token                  # npx 方式，不用克隆
 ```
 
 输出里按客户端分段：Claude Code 与 Codex CLI 各一条可直接执行的命令，Claude Desktop、Cursor、Windsurf/Devin、VS Code、Zed 各给配置文件位置和 JSON 或 TOML 片段，最后一段是任何支持 stdio 的客户端都能用的标准 `mcpServers` JSON。路径会按你的操作系统和实际安装位置填好。
@@ -70,6 +77,26 @@ Claude Desktop 的 `claude_desktop_config.json`：
 ```
 
 只读版在 `args` 末尾加 `"--readonly"`。
+
+npx 方式不需要路径，命令换成 `npx`、参数换成 `-y quanqiudaili-mcp`，其余一样。Claude Code：
+
+```bash
+claude mcp add -s user -e QQDL_TOKEN=你的token quanqiudaili -- npx -y quanqiudaili-mcp
+```
+
+Claude Desktop 的 `claude_desktop_config.json`：
+
+```json
+{
+  "mcpServers": {
+    "quanqiudaili": {
+      "command": "npx",
+      "args": ["-y", "quanqiudaili-mcp"],
+      "env": { "QQDL_TOKEN": "你的token" }
+    }
+  }
+}
+```
 
 注意：服务是被客户端当子进程拉起的，只继承一小份白名单环境变量，你在终端里 `export` 或 `$env:` 设置的 `QQDL_TOKEN` 传不进去，token 必须像上面那样写在客户端配置里。
 
@@ -155,3 +182,7 @@ npm run build-spec     # 只用本地 spec/pages 重新生成 tools.json（不�
 ```
 
 涉及在后端创建数据的操作（新增子账号、下单、续费等）不做自动化联调，由维护者用测试账号手动验证。设计与实施文档见 `docs/`。
+
+## 许可
+
+MIT，见 `LICENSE`。

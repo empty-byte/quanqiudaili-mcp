@@ -10,11 +10,12 @@ import { renderSetup } from './setup.js';
 import type { ToolDef } from './types.js';
 
 const USAGE = `用法：quanqiudaili-mcp [--readonly] [--yes]
-      quanqiudaili-mcp setup [--token 你的token] [--readonly]
+      quanqiudaili-mcp setup [--token 你的token] [--readonly] [--npx]
   不带参数     全部 34 个工具，含下单扣费与删除子账号；写操作执行前先向用户确认
   --readonly   只暴露 20 个只读工具
   --yes        写操作不确认直接执行，给自动化脚本用
-  setup        打印 Claude Code、Claude Desktop、Codex、Cursor、VS Code、Zed、Windsurf 的配置片段，不改任何文件`;
+  setup        打印 Claude Code、Claude Desktop、Codex、Cursor、VS Code、Zed、Windsurf 的配置片段，不改任何文件；
+               默认按本机安装路径生成，--npx 生成 npx -y quanqiudaili-mcp 的写法`;
 
 const argv = process.argv.slice(2);
 
@@ -22,7 +23,7 @@ if (argv[0] === 'setup') {
   const withEq = argv.find(a => a.startsWith('--token='));
   const at = argv.indexOf('--token');
   const token = withEq ? withEq.slice('--token='.length) : at >= 0 ? argv[at + 1] : undefined;
-  console.log(renderSetup({ indexPath: fileURLToPath(import.meta.url), token, readonly: argv.includes('--readonly'), platform: process.platform }));
+  console.log(renderSetup({ indexPath: fileURLToPath(import.meta.url), token, readonly: argv.includes('--readonly'), npx: argv.includes('--npx'), platform: process.platform }));
   process.exit(0);
 }
 

@@ -30,6 +30,14 @@ describe('renderSetup', () => {
     expect(out).toContain('args = ["C:/tools/quanqiudaili-mcp/dist/src/index.js", "--readonly"]');
   });
 
+  it('--npx 时命令是 npx -y 包名，不含本机路径，--readonly 跟在后面', () => {
+    const out = renderSetup({ ...win, npx: true, readonly: true });
+    expect(out).toContain('claude mcp add -s user -e QQDL_TOKEN=abc quanqiudaili -- npx -y quanqiudaili-mcp --readonly');
+    expect(out).toContain(JSON.stringify({ mcpServers: { quanqiudaili: { command: 'npx', args: ['-y', 'quanqiudaili-mcp', '--readonly'], env } } }, null, 2));
+    expect(out).toContain('[mcp_servers.quanqiudaili]\ncommand = "npx"\nargs = ["-y", "quanqiudaili-mcp", "--readonly"]');
+    expect(out).not.toContain('C:/tools');
+  });
+
   it('没给 token 时留占位并提醒', () => {
     const out = renderSetup({ ...win, token: undefined });
     expect(out).toContain('QQDL_TOKEN=你的token');

@@ -1,9 +1,9 @@
 {
   "name": "quanqiudaili-mcp",
   "version": "0.1.0",
-  "description": "全球代理 externalapi 的 MCP 服务器：query 只读 / manage 管理",
+  "description": "全球代理（quanqiudaili.com）externalapi 的 MCP 服务器，stdio",
   "type": "module",
-  "private": true,
+  "license": "MIT",
   "bin": { "quanqiudaili-mcp": "dist/src/index.js" },
   "files": ["dist/src", "spec/tools.json", "spec/dynamic-proxy-session.md"],
   "engines": { "node": ">=20" },
