@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import type { ServerContext } from '@modelcontextprotocol/server';
-import { ConfirmTokens, TOKEN_TTL_MS, preview, withConfirm } from '../src/confirm.js';
+import { ConfirmTokens, TOKEN_QUIET_MS, TOKEN_TTL_MS, preview, withConfirm } from '../src/confirm.js';
 import type { ToolDef } from '../src/types.js';
 
 const tool: ToolDef = {
@@ -41,15 +41,29 @@ describe('preview', () => {
 
 describe('ConfirmTokens', () => {
   it('确认码绑定工具与参数，只能用一次，参数顺序不同也算同一组', () => {
-    const t = new ConfirmTokens();
+    const t = new ConfirmTokens(Date.now, 0);
     const token = t.issue('x', { a: 1, b: [1, 2] });
     expect(t.consume(token, 'x', { b: [1, 2], a: 1 })).toBe('ok');
     expect(t.consume(token, 'x', { a: 1, b: [1, 2] })).toBe('unknown');
   });
 
-  it('参数变了或工具变了报 mismatch 并作废；过期报 expired', () => {
+  it('发出后静默期内不能用且不消费；提前试一次生效时间就顺延一次；静默够了才能用', () => {
     let now = 1_000;
     const t = new ConfirmTokens(() => now);
+    const token = t.issue('x', { a: 1 });
+    expect(t.consume(token, 'x', { a: 1 })).toBe('too_soon');
+    now += TOKEN_QUIET_MS - 1;
+    expect(t.consume(token, 'x', { a: 1 })).toBe('too_soon');
+    now += TOKEN_QUIET_MS - 1;
+    expect(t.consume(token, 'x', { a: 1 })).toBe('too_soon');
+    now += TOKEN_QUIET_MS;
+    expect(t.consume(token, 'x', { a: 1 })).toBe('ok');
+    expect(t.consume(token, 'x', { a: 1 })).toBe('unknown');
+  });
+
+  it('参数变了或工具变了报 mismatch 并作废；过期报 expired', () => {
+    let now = 1_000;
+    const t = new ConfirmTokens(() => now, 0);
     expect(t.consume(t.issue('x', { a: 1 }), 'x', { a: 2 })).toBe('mismatch');
     expect(t.consume(t.issue('x', { a: 1 }), 'y', { a: 1 })).toBe('mismatch');
     const token = t.issue('x', { a: 1 });
@@ -64,7 +78,7 @@ describe('withConfirm', () => {
 
   it('客户端支持弹窗：第一次返回 input_required，预览在弹窗文案里；用户同意后才执行', async () => {
     const exec = vi.fn(async () => ok);
-    const h = withConfirm(tool, { supportsElicitation: () => true, exec, tokens: new ConfirmTokens() });
+    const h = withConfirm(tool, { supportsElicitation: () => true, exec, tokens: new ConfirmTokens(Date.now, 0) });
 
     const ask = (await h(args, ctxWith())) as { resultType?: string; inputRequests?: Record<string, { params: { message: string } }> };
     expect(ask.resultType).toBe('input_required');
@@ -78,7 +92,7 @@ describe('withConfirm', () => {
 
   it('客户端支持弹窗但没拿到同意（拒绝、取消、没勾选）：退到确认码并说明，带码重调才执行', async () => {
     const exec = vi.fn(async () => ok);
-    const h = withConfirm(tool, { supportsElicitation: () => true, exec, tokens: new ConfirmTokens() });
+    const h = withConfirm(tool, { supportsElicitation: () => true, exec, tokens: new ConfirmTokens(Date.now, 0) });
     for (const [i, answer] of [{ action: 'decline' }, { action: 'cancel' }, { action: 'accept', content: { confirm: false } }].entries()) {
       const r = await h(args, ctxWith({ confirm: answer }));
       expect(textOf(r)).toContain('弹窗没有得到确认');
@@ -92,7 +106,7 @@ describe('withConfirm', () => {
 
   it('客户端不支持弹窗：先给预览和确认码，带码且参数相同才执行，确认码不进后端参数', async () => {
     const exec = vi.fn(async () => ok);
-    const h = withConfirm(tool, { supportsElicitation: () => false, exec, tokens: new ConfirmTokens() });
+    const h = withConfirm(tool, { supportsElicitation: () => false, exec, tokens: new ConfirmTokens(Date.now, 0) });
 
     const first = await h(args, ctxWith());
     expect((first as { isError?: boolean }).isError).toBeFalsy();
@@ -113,5 +127,19 @@ describe('withConfirm', () => {
     const token2 = textOf(await h(args, ctxWith())).match(/confirm_token=([0-9a-f]+)/)?.[1];
     expect(await h({ ...args, confirm_token: token2 }, ctxWith())).toBe(ok);
     expect(exec).toHaveBeenCalledWith(args);
+  });
+
+  it('拿到确认码立刻重调不执行，提示先问用户；等过静默期再带码才执行', async () => {
+    let now = 1_000;
+    const exec = vi.fn(async () => ok);
+    const h = withConfirm(tool, { supportsElicitation: () => false, exec, tokens: new ConfirmTokens(() => now) });
+    const token = textOf(await h(args, ctxWith())).match(/confirm_token=([0-9a-f]+)/)?.[1];
+    now += 2_000;
+    const early = await h({ ...args, confirm_token: token }, ctxWith());
+    expect(early).toMatchObject({ isError: true });
+    expect(textOf(early)).toContain('确认码还不能用');
+    expect(exec).not.toHaveBeenCalled();
+    now += TOKEN_QUIET_MS + 1;
+    expect(await h({ ...args, confirm_token: token }, ctxWith())).toBe(ok);
   });
 });

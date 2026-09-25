@@ -14,7 +14,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `npm run build-spec`：用本地 `spec/pages/` 重新生成 `spec/tools.json`，不联网。
 - `npm run sync-docs`：联网重新下载文档站全部接口页到 `spec/pages/`，随后自动 build-spec 并打印与上一版的差异。
 - 本机若装了 RTK hook，`npx vitest` 的输出会被改写成看不到结果，改用 `rtk proxy npm test` 或 `rtk proxy npx vitest run …`。
-- 运行：`node dist/src/index.js [--readonly] [--yes]`。环境变量 `QQDL_TOKEN`（必填）、`QQDL_BASE_URL`（默认线上）、`QQDL_TIMEOUT_MS`。
+- 运行：`node dist/src/index.js [--readonly] [--yes]`。环境变量 `QQDL_TOKEN`（必填）、`QQDL_BASE_URL`（默认线上）、`QQDL_TIMEOUT_MS`、`QQDL_CONFIRM_QUIET_MS`（确认码静默期，默认 10000，端到端测试设 0）。
 - 配置片段：`node dist/src/index.js setup --token xxx [--readonly] [--npx]`，打印 Claude Code、Claude Desktop、Codex、Cursor、VS Code、Zed、Windsurf 的配置，生成逻辑在 `src/setup.ts`（纯文本函数，有单测）。默认按本机路径生成 `node …/dist/src/index.js`，`--npx` 生成 `npx -y quanqiudaili-mcp`。
 - 发布：`npm publish`（`prepare` 会先构建，`files` 白名单只带 `dist/src`、`spec/tools.json`、`spec/dynamic-proxy-session.md`）。运行期从 `dist/src/index.js` 往上两级找包根，npx 安装与克隆安装的布局一致。
 - 调试：`npx @modelcontextprotocol/inspector -e QQDL_TOKEN=xxx -- node dist/src/index.js`。客户端拉起子进程时不继承终端环境变量，token 只能通过客户端配置或 Inspector 的 `-e` 传入。
@@ -25,7 +25,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 运行期：`src/index.ts` 只读 `spec/tools.json`，用 `fromJsonSchema()` 把每个工具的 JSON Schema 原样注册给 SDK，SDK 用内置 Ajv 在调用前校验（所有对象都 `additionalProperties: false`，写错参数名会被拒绝而不是发给后端）。`src/http.ts` 把参数经 `src/form.ts` 编成 `application/x-www-form-urlencoded`（PHP 括号格式 `content[0][id]=…`），只读工具 GET、其余 POST，每个请求都附带参数 `is_mcp_send=1` 和请求头 `User-Agent: quanqiudaili mcp` 供后端识别 MCP 流量，再把后端 `{code,msg,time,data}` 映射成 MCP 结果。`--readonly` 就是按 `readOnly` 过滤同一份工具表。运行期不 import zod、不解析 YAML、不联网拉文档。
 
-写操作确认（`src/confirm.ts`）：非只读工具的处理器被 `withConfirm` 包一层。客户端声明了 elicitation 能力（2025 版协议看连接初始化时的能力，2026 版看每个请求信封里的 `CLIENT_CAPABILITIES_META_KEY`）就返回 `inputRequired(...)` 让客户端弹出操作预览，用户点确认后 SDK 重入处理器，从 `ctx.mcpReq.inputResponses` 读到 accept 且 confirm=true 才调后端；弹窗没拿到同意（decline、cancel、未勾选）和不支持弹窗的客户端都退到确认码：返回预览和一次性 `confirm_token`（绑定工具与参数、5 分钟有效），模型转述给用户后带码重调。弹窗的拒绝不直接当取消，是因为 Claude Code 的 VS Code 插件声明支持 elicitation 却不显示弹窗就回 decline，当取消会让写操作在它上面永远做不成。带了 `confirm_token` 的调用不再弹窗，直接校验确认码。为此写工具的 schema 在注册时多一个可选 `confirm_token`，`spec/tools.json` 本身不含它。预览文案由 `preview()` 从工具标题、描述首句和参数拼出，不查价、不查余额。
+写操作确认（`src/confirm.ts`）：非只读工具的处理器被 `withConfirm` 包一层。客户端声明了 elicitation 能力（2025 版协议看连接初始化时的能力，2026 版看每个请求信封里的 `CLIENT_CAPABILITIES_META_KEY`）就返回 `inputRequired(...)` 让客户端弹出操作预览，用户点确认后 SDK 重入处理器，从 `ctx.mcpReq.inputResponses` 读到 accept 且 confirm=true 才调后端；弹窗没拿到同意（decline、cancel、未勾选）和不支持弹窗的客户端都退到确认码：返回预览和一次性 `confirm_token`（绑定工具与参数、5 分钟有效），模型转述给用户后带码重调。弹窗的拒绝不直接当取消，是因为 Claude Code 的 VS Code 插件声明支持 elicitation 却不显示弹窗就回 decline，当取消会让写操作在它上面永远做不成。带了 `confirm_token` 的调用不再弹窗，直接校验确认码。确认码发出后有静默期（默认 10 秒）：模型拿到码不问用户就重调，间隔只有几秒，会收到"还不能用"且不消费、生效时间顺延；只有停下来等用户回复之后才用得上。这是确认码路径能给的最强保证，弹窗路径每次都弹。为此写工具的 schema 在注册时多一个可选 `confirm_token`，`spec/tools.json` 本身不含它。预览文案由 `preview()` 从工具标题、描述首句和参数拼出，不查价、不查余额。
 
 续费兜底（`src/renew.ts`）：`order_renew` 的处理器外面套了 `withRenewDefaults`，在确认之前先按 ids 查 `sub_account_list`，`is_renew` 一律沿用当前值（工具不暴露这个参数，续费不改开关），`renew_with_bandwidth` 没传才沿用；子账号之间设置不一致就报错让分开续费。预览里看到的就是补齐后真正要发的值。原因见下面后端事实里续费接口那条。
 

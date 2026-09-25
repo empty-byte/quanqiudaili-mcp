@@ -4,6 +4,7 @@ import { text } from './http.js';
 import type { JsonSchema, ToolDef } from './types.js';
 
 export const TOKEN_TTL_MS = 5 * 60_000;
+export const TOKEN_QUIET_MS = 10_000;
 
 export const CONFIRM_TOKEN_SCHEMA: JsonSchema = {
   type: 'string',
@@ -36,23 +37,40 @@ const canon = (v: unknown): unknown =>
 const fingerprint = (tool: string, args: Record<string, unknown>): string =>
   createHash('sha256').update(tool + JSON.stringify(canon(args))).digest('hex');
 
-/** 客户端不支持弹窗确认时用的一次性确认码：绑定工具与参数，过期或参数变了都作废 */
+/**
+ * 客户端不支持弹窗确认时用的一次性确认码：绑定工具与参数，过期或参数变了都作废。
+ * 发出后要静默一段时间才能用：模型拿到确认码后不问用户直接重调，间隔只有几秒，而用户真的看完预览再回复至少要十来秒；
+ * 提前用不消费确认码，只把生效时间往后推，连续硬试永远用不上，停下来问用户之后再调就能用。
+ */
 export class ConfirmTokens {
-  private pending = new Map<string, { fp: string; expires: number }>();
-  constructor(private now: () => number = Date.now) {}
+  private pending = new Map<string, { fp: string; expires: number; notBefore: number }>();
+  constructor(private now: () => number = Date.now, private quietMs: number = TOKEN_QUIET_MS) {}
 
   issue(tool: string, args: Record<string, unknown>): string {
     const token = randomBytes(4).toString('hex');
-    this.pending.set(token, { fp: fingerprint(tool, args), expires: this.now() + TOKEN_TTL_MS });
+    const t = this.now();
+    this.pending.set(token, { fp: fingerprint(tool, args), expires: t + TOKEN_TTL_MS, notBefore: t + this.quietMs });
     return token;
   }
 
-  consume(token: string, tool: string, args: Record<string, unknown>): 'ok' | 'unknown' | 'expired' | 'mismatch' {
+  consume(token: string, tool: string, args: Record<string, unknown>): 'ok' | 'unknown' | 'expired' | 'mismatch' | 'too_soon' {
     const p = this.pending.get(token);
     if (!p) return 'unknown';
+    const t = this.now();
+    if (p.expires < t) {
+      this.pending.delete(token);
+      return 'expired';
+    }
+    if (p.fp !== fingerprint(tool, args)) {
+      this.pending.delete(token);
+      return 'mismatch';
+    }
+    if (t < p.notBefore) {
+      p.notBefore = t + this.quietMs;
+      return 'too_soon';
+    }
     this.pending.delete(token);
-    if (p.expires < this.now()) return 'expired';
-    return p.fp === fingerprint(tool, args) ? 'ok' : 'mismatch';
+    return 'ok';
   }
 }
 
@@ -73,6 +91,9 @@ export function withConfirm(tool: ToolDef, deps: ConfirmDeps) {
     if (typeof confirm_token === 'string' && confirm_token) {
       const state = deps.tokens.consume(confirm_token, tool.name, args);
       if (state === 'mismatch') return text('确认码对应的参数与本次不同，已作废。请不带确认码重新调用，重新向用户确认。', true);
+      if (state === 'too_soon') {
+        return text('确认码还不能用：它只在你把预览转述给用户、用户回复同意之后才生效，这次调用离上次太近。现在停下来，把预览告诉用户并等待回复；不要立刻重试，每提前试一次生效时间都会顺延。每一次操作都要单独确认，之前确认过同样的操作也不例外。', true);
+      }
       if (state !== 'ok') return text('确认码无效或已过期。请不带确认码重新调用，重新向用户确认。', true);
       return deps.exec(args);
     }
@@ -102,7 +123,7 @@ export function withConfirm(tool: ToolDef, deps: ConfirmDeps) {
 
     const token = deps.tokens.issue(tool.name, args);
     return text(
-      `${note}待确认，尚未执行。\n${preview(tool, args)}\n\n请把以上内容原样告诉用户；用户明确同意后，用相同参数加 confirm_token=${token} 再调用一次（5 分钟内有效，只能用一次）。用户不同意就不要再调。`,
+      `${note}待确认，尚未执行。\n${preview(tool, args)}\n\n请把以上内容原样告诉用户；用户明确同意后，用相同参数加 confirm_token=${token} 再调用一次（5 分钟内有效，只能用一次，用户回复之前不生效）。用户不同意就不要再调。每一次操作都要单独确认，之前确认过同样的操作也不例外。`,
       false,
     );
   };

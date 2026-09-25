@@ -32,7 +32,7 @@ beforeAll(async () => {
 });
 afterAll(() => backend.close());
 
-type ConnectOptions = { elicit?: 'accept' | 'decline'; messages?: string[]; modern?: boolean };
+type ConnectOptions = { elicit?: 'accept' | 'decline'; messages?: string[]; modern?: boolean; quietMs?: number };
 
 async function connect(args: string[], opts: ConnectOptions = {}): Promise<Client> {
   const client = new Client({ name: 'test', version: '0.0.0' }, {
@@ -48,7 +48,7 @@ async function connect(args: string[], opts: ConnectOptions = {}): Promise<Clien
   await client.connect(new StdioClientTransport({
     command: process.execPath,
     args: [ENTRY, ...args],
-    env: { ...(process.env as Record<string, string>), QQDL_TOKEN: 'test-token', QQDL_BASE_URL: baseUrl },
+    env: { ...(process.env as Record<string, string>), QQDL_TOKEN: 'test-token', QQDL_BASE_URL: baseUrl, QQDL_CONFIRM_QUIET_MS: String(opts.quietMs ?? 0) },
     stderr: 'ignore',
   }));
   return client;
@@ -212,6 +212,17 @@ describe('写操作确认', () => {
     const reused = await c.callTool({ ...WRITE, arguments: { ...WRITE.arguments, confirm_token: token } });
     expect(reused.isError).toBe(true);
     expect(hits).toHaveLength(1);
+    await c.close();
+  }, 20_000);
+
+  it('默认静默期下拿到确认码立刻重调会被拒，后端无请求', async () => {
+    const c = await connect([], { quietMs: 10_000 });
+    hits.length = 0;
+    const token = textOf(await c.callTool(WRITE)).match(/confirm_token=([0-9a-f]+)/)?.[1];
+    const early = await c.callTool({ ...WRITE, arguments: { ...WRITE.arguments, confirm_token: token } });
+    expect(early.isError).toBe(true);
+    expect(textOf(early)).toContain('确认码还不能用');
+    expect(hits).toHaveLength(0);
     await c.close();
   }, 20_000);
 
