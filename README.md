@@ -8,68 +8,74 @@
 
 ## 环境要求
 
-Node.js 20 或更新（推荐当前 LTS）。Windows、macOS、Linux 均可。
+Node.js 20 或更新（推荐当前 LTS），Windows、macOS、Linux 均可。用方式一（npx）还要求本机装有 `git` 并能访问 GitHub。
 
-## 安装
-
-两种方式任选一种。
-
-方式一，克隆仓库：
-
-```bash
-git clone <仓库地址> quanqiudaili-mcp
-cd quanqiudaili-mcp
-npm ci
-```
-
-`npm ci` 结束时会自动编译到 `dist/`。启动命令是 `node <安装目录>/dist/src/index.js`，只读加 `--readonly`，自动化脚本加 `--yes` 跳过写操作确认；也可以 `npm install -g .` 得到全局命令 `quanqiudaili-mcp`。
-
-方式二，npx 直接从 GitHub 拉起，不用克隆也不用装：客户端配置里把命令写成
-
-```
-npx -y github:empty-byte/quanqiudaili-mcp
-```
-
-客户端第一次拉起时自动从 GitHub 取源码、装依赖并编译，之后缓存复用；本机要装有 `git`，并且能访问 GitHub，第一次会比较慢。`--readonly`、`--yes` 照样跟在后面。Windows 下若客户端报找不到 npx，把 `command` 改成 `cmd`，`args` 最前面加 `"/c", "npx"`。用 `setup --npx` 可以直接打印这种形式的配置片段。
-
-## 获取 token
+## 第一步：拿到 token
 
 token 就是网站的 API Key，永久有效，每个账号最多 20 个：
 
 1. 登录 quanqiudaili.com，点右上角头像，进 API Keys。
-2. 新建一个 Key，复制形如 `sk-…` 的完整字符串。
-3. 填到下文配置里的 `QQDL_TOKEN`。
+2. 新建一个 Key，复制形如 `sk-…` 的完整字符串，下面写配置时填进 `QQDL_TOKEN`。
 
 Key 被删除或复制不完整时，工具会返回"token 无效"，到 API Keys 页面核对或重新生成后更新配置即可。Key 等同于账号权限，不要分享给他人或写进客户端代码。
 
-## 配置
+## 第二步：接入客户端，两种方式二选一
 
-环境变量：
+### 方式一：npx，不用下载安装（推荐）
 
-| 变量 | 必填 | 默认值 | 说明 |
-|---|---|---|---|
-| `QQDL_TOKEN` | 是 | 无 | 网站 API Keys 页面生成的 API Key |
-| `QQDL_BASE_URL` | 否 | `https://admin.quanqiudaili.com` | 指向测试环境时修改 |
-| `QQDL_TIMEOUT_MS` | 否 | `30000` | 单次请求超时（毫秒） |
-| `QQDL_CONFIRM_QUIET_MS` | 否 | `10000` | 确认码发出后多久才能用（毫秒），见下文"写操作确认" |
+客户端配置里把启动命令写成 `npx -y github:empty-byte/quanqiudaili-mcp`。客户端第一次拉起时自动从 GitHub 取源码、装依赖、编译并缓存，之后直接复用；第一次会慢一两分钟。
 
-装一次之后，跑一条命令把所有客户端的配置片段打印出来，贴进你用的那个即可（只打印，不改任何文件）：
+把所有客户端的配置片段打印出来，贴进你用的那个（只打印，不改任何文件）：
+
+```bash
+npx -y github:empty-byte/quanqiudaili-mcp setup --npx --token 你的token
+npx -y github:empty-byte/quanqiudaili-mcp setup --npx --token 你的token --readonly   # 只读版
+```
+
+也可以直接照抄下面两个最常用的。Claude Code，一条命令：
+
+```bash
+claude mcp add -s user -e QQDL_TOKEN=你的token quanqiudaili -- npx -y github:empty-byte/quanqiudaili-mcp
+```
+
+Claude Desktop，写进 `claude_desktop_config.json`（Windows 在 `%APPDATA%\Claude\`，macOS 在 `~/Library/Application Support/Claude/`）：
+
+```json
+{
+  "mcpServers": {
+    "quanqiudaili": {
+      "command": "npx",
+      "args": ["-y", "github:empty-byte/quanqiudaili-mcp"],
+      "env": { "QQDL_TOKEN": "你的token" }
+    }
+  }
+}
+```
+
+Windows 下若客户端报找不到 npx，把 `command` 改成 `cmd`，`args` 最前面加 `"/c", "npx"`。
+
+### 方式二：克隆到本机
+
+```bash
+git clone https://github.com/empty-byte/quanqiudaili-mcp.git
+cd quanqiudaili-mcp
+npm ci
+```
+
+`npm ci` 结束时会自动编译到 `dist/`，启动命令是 `node <安装目录>/dist/src/index.js`。打印配置片段：
 
 ```bash
 node <安装目录>/dist/src/index.js setup --token 你的token
 node <安装目录>/dist/src/index.js setup --token 你的token --readonly   # 只读版
-npx -y quanqiudaili-mcp setup --npx --token 你的token                  # npx 方式，不用克隆
 ```
 
-输出里按客户端分段：Claude Code 与 Codex CLI 各一条可直接执行的命令，Claude Desktop、Cursor、Windsurf/Devin、VS Code、Zed 各给配置文件位置和 JSON 或 TOML 片段，最后一段是任何支持 stdio 的客户端都能用的标准 `mcpServers` JSON。路径会按你的操作系统和实际安装位置填好。
-
-两个最常用的示例（`<安装目录>` 换成实际路径，Windows 也用正斜杠，例如 `C:/tools/quanqiudaili-mcp`）。Claude Code：
+Claude Code（`<安装目录>` 换成实际绝对路径，Windows 也用正斜杠，例如 `C:/tools/quanqiudaili-mcp`）：
 
 ```bash
 claude mcp add -s user -e QQDL_TOKEN=你的token quanqiudaili -- node <安装目录>/dist/src/index.js
 ```
 
-Claude Desktop 的 `claude_desktop_config.json`：
+Claude Desktop：
 
 ```json
 {
@@ -83,29 +89,23 @@ Claude Desktop 的 `claude_desktop_config.json`：
 }
 ```
 
-只读版在 `args` 末尾加 `"--readonly"`。
+以后更新：进目录 `git pull && npm ci`。也可以 `npm install -g .` 得到全局命令 `quanqiudaili-mcp`。
 
-npx 方式不需要路径，命令换成 `npx`、参数换成 `-y quanqiudaili-mcp`，其余一样。Claude Code：
+### 两种方式都适用
 
-```bash
-claude mcp add -s user -e QQDL_TOKEN=你的token quanqiudaili -- npx -y quanqiudaili-mcp
-```
+- `setup` 的输出按客户端分段：Claude Code 与 Codex CLI 各一条可直接执行的命令，Claude Desktop、Cursor、Windsurf/Devin、VS Code、Zed 各给配置文件位置和 JSON 或 TOML 片段，最后一段是任何支持 stdio 的客户端都能用的标准 `mcpServers` JSON。
+- 启动参数：不带参数是全部 34 个工具；`--readonly` 只暴露 20 个只读工具，写在 `args` 末尾；`--yes` 跳过写操作确认，只给自动化脚本用。
+- token 必须写在客户端配置的 `env` 里（或 `claude mcp add -e`）。服务是被客户端当子进程拉起的，你在终端里 `export` 或 `$env:` 设置的变量传不进去。
+- 改完配置重启客户端。验证：让助手回答"我的余额是多少"，它会调用 user_balance 返回金额；Claude Code 里 `/mcp` 能看到 quanqiudaili 的连接状态。
 
-Claude Desktop 的 `claude_desktop_config.json`：
+环境变量：
 
-```json
-{
-  "mcpServers": {
-    "quanqiudaili": {
-      "command": "npx",
-      "args": ["-y", "quanqiudaili-mcp"],
-      "env": { "QQDL_TOKEN": "你的token" }
-    }
-  }
-}
-```
-
-注意：服务是被客户端当子进程拉起的，只继承一小份白名单环境变量，你在终端里 `export` 或 `$env:` 设置的 `QQDL_TOKEN` 传不进去，token 必须像上面那样写在客户端配置里。
+| 变量 | 必填 | 默认值 | 说明 |
+|---|---|---|---|
+| `QQDL_TOKEN` | 是 | 无 | 网站 API Keys 页面生成的 API Key |
+| `QQDL_BASE_URL` | 否 | `https://admin.quanqiudaili.com` | 指向测试环境时修改 |
+| `QQDL_TIMEOUT_MS` | 否 | `30000` | 单次请求超时（毫秒） |
+| `QQDL_CONFIRM_QUIET_MS` | 否 | `10000` | 确认码发出后多久才能用（毫秒），见下文"写操作确认" |
 
 ## 写操作确认
 
