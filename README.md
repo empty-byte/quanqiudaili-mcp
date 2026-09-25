@@ -22,20 +22,13 @@ npm ci
 
 ## 获取 token
 
-MCP 只接受 token，不做账号密码登录。用你的账号密码调一次登录接口，取返回里的 `data.userinfo.token`（有效期 30 天）：
+token 就是网站的 API Key，永久有效，每个账号最多 20 个：
 
-```bash
-curl -X POST https://admin.quanqiudaili.com/externalapi/user/login \
-  -d "account=你的账号" -d "password=你的密码"
-```
+1. 登录 quanqiudaili.com，点右上角头像，进 API Keys。
+2. 新建一个 Key，复制形如 `sk-…` 的完整字符串。
+3. 填到下文配置里的 `QQDL_TOKEN`。
 
-Windows PowerShell 里 `curl` 是 `Invoke-WebRequest` 的别名，要写 `curl.exe`，并且不能用反斜杠续行：
-
-```powershell
-curl.exe -X POST https://admin.quanqiudaili.com/externalapi/user/login -d "account=你的账号" -d "password=你的密码"
-```
-
-token 过期后工具会返回"token 无效或已过期"，重新登录取新 token 并更新配置即可。
+Key 被删除或复制不完整时，工具会返回"token 无效"，到 API Keys 页面核对或重新生成后更新配置即可。Key 等同于账号权限，不要分享给他人或写进客户端代码。
 
 ## 配置
 
@@ -43,7 +36,7 @@ token 过期后工具会返回"token 无效或已过期"，重新登录取新 to
 
 | 变量 | 必填 | 默认值 | 说明 |
 |---|---|---|---|
-| `QQDL_TOKEN` | 是 | 无 | 登录接口返回的 token |
+| `QQDL_TOKEN` | 是 | 无 | 网站 API Keys 页面生成的 API Key |
 | `QQDL_BASE_URL` | 否 | `https://admin.quanqiudaili.com` | 指向测试环境时修改 |
 | `QQDL_TIMEOUT_MS` | 否 | `30000` | 单次请求超时（毫秒） |
 

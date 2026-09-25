@@ -77,7 +77,7 @@ describe('callApi', () => {
   it('HTTP 401 或 code 401 提示 token 失效，且不回显 token', async () => {
     const r = await callApi(tool(), {}, cfg, stub(401, '{"code":401,"msg":"请先登录","data":null}'));
     expect(r.isError).toBe(true);
-    expect(textOf(r)).toMatch(/token 无效或已过期.*请先登录/);
+    expect(textOf(r)).toMatch(/token 无效.*请先登录.*API Keys/);
     expect(textOf(r)).not.toContain('tk');
   });
 
@@ -114,12 +114,12 @@ describe('callApi', () => {
 
   it('HTTP 200 但 code 为 401 同样提示 token 失效', async () => {
     const r = await callApi(tool(), {}, cfg, stub(200, '{"code":401,"msg":"请先登录","data":null}'));
-    expect(textOf(r)).toMatch(/token 无效或已过期/);
+    expect(textOf(r)).toMatch(/token 无效/);
   });
 
   it('HTTP 401 但 code 不是 401 同样提示 token 失效', async () => {
     const r = await callApi(tool(), {}, cfg, stub(401, '{"code":0,"msg":"Unauthorized","data":null}'));
-    expect(textOf(r)).toMatch(/token 无效或已过期/);
+    expect(textOf(r)).toMatch(/token 无效/);
   });
 
   it('网络异常带出 Node fetch 的底层原因', async () => {

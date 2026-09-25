@@ -105,7 +105,7 @@ describe('spec/tools.json', () => {
 
   it('spec/pages 的目录与文件名符合 placePages 规则（sync-docs 按同一规则落盘，不要手动改名）', () => {
     const pages = loadPages();
-    expect(pages).toHaveLength(85);
+    expect(pages).toHaveLength(81);
     for (const [file, p] of placePages(pages)) expect(file, p.id).toBe(`${p.id}.md`);
   });
 

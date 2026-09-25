@@ -12,7 +12,7 @@ export function cfgFromEnv(env: NodeJS.ProcessEnv = process.env): Cfg {
   const token = (env.QQDL_TOKEN ?? '').trim();
   if (!token) {
     throw new Error(
-      '缺少环境变量 QQDL_TOKEN。请先用账号密码调用 externalapi/user/login 取得 token，做法见 README。' +
+      '缺少环境变量 QQDL_TOKEN。请到全球代理网站的 API Keys 页面生成一个 API Key 填进来，做法见 README。' +
         '客户端拉起本服务时不继承终端里的环境变量，token 要写在客户端配置里（如 claude mcp add -e QQDL_TOKEN=…），用 Inspector 调试时通过 -e 传入。',
     );
   }
@@ -79,7 +79,7 @@ export async function callApi(
   const msg = String(body.msg ?? '');
   if (code === 1) return text(JSON.stringify({ code, msg, data: tool.pick ? pickField(body.data, tool.pick) : body.data ?? null }));
   if (code === 401 || code === 403 || status === 401) {
-    return text(`token 无效或已过期（${msg}）。请重新调用 externalapi/user/login 获取 token，更新 QQDL_TOKEN 后重启本 MCP。`, true);
+    return text(`token 无效（${msg}）。API Key 永久有效，但可能被删除或复制不完整：到网站 API Keys 页面核对或重新生成，更新 QQDL_TOKEN 后重启本 MCP。`, true);
   }
   if (msg.includes('访问频繁')) return text(`${msg} 后端限流为每个接口每 IP 每分钟 180 次，请稍后重试。`, true);
   return text(body.data == null ? msg : `${msg}\n${JSON.stringify(body.data)}`, true);

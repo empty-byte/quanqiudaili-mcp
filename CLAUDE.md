@@ -20,7 +20,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 架构：两条链路
 
-开发期（生成链路）：文档站 `llms.txt` → `scripts/sync-docs.ts` 下载 85 个接口页（每页一个 OpenAPI 3.0.1 YAML 块），按文档站左侧分组存成 `spec/pages/<分组英文名>/<控制器>-<方法>.md`（映射表 `TAG_DIR`，产品分组带 `product_type_id` 前缀，如 `2-static-standard/device-accountList.md`），同一分组同一接口有多页时文件名带 Apifox 页面 id → `scripts/lib/merge.ts` 按接口路径合并变体页、应用 `spec/overrides.yaml` → `scripts/build-spec.ts` 写出 `spec/tools.json`。原始页和生成物都提交入库，`spec/pages/` 同时是快照测试的输入；目录与文件名由 `placePages()` 决定，不要手动改名，`test/spec.test.ts` 会校验。
+开发期（生成链路）：文档站 `llms.txt` → `scripts/sync-docs.ts` 下载 81 个接口页（每页一个 OpenAPI 3.0.1 YAML 块），按文档站左侧分组存成 `spec/pages/<分组英文名>/<控制器>-<方法>.md`（映射表 `TAG_DIR`，产品分组带 `product_type_id` 前缀，如 `2-static-standard/device-accountList.md`），同一分组同一接口有多页时文件名带 Apifox 页面 id → `scripts/lib/merge.ts` 按接口路径合并变体页、应用 `spec/overrides.yaml` → `scripts/build-spec.ts` 写出 `spec/tools.json`。原始页和生成物都提交入库，`spec/pages/` 同时是快照测试的输入；目录与文件名由 `placePages()` 决定，不要手动改名，`test/spec.test.ts` 会校验。
 
 运行期：`src/index.ts` 只读 `spec/tools.json`，用 `fromJsonSchema()` 把每个工具的 JSON Schema 原样注册给 SDK，SDK 用内置 Ajv 在调用前校验（所有对象都 `additionalProperties: false`，写错参数名会被拒绝而不是发给后端）。`src/http.ts` 把参数经 `src/form.ts` 编成 `application/x-www-form-urlencoded`（PHP 括号格式 `content[0][id]=…`），只读工具 GET、其余 POST，再把后端 `{code,msg,time,data}` 映射成 MCP 结果。`--readonly` 就是按 `readOnly` 过滤同一份工具表。运行期不 import zod、不解析 YAML、不联网拉文档。
 
@@ -34,7 +34,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 后端事实（已对照 proxy-distribution-system 源码核实）
 
-- token 放请求头 `token`。成功 `{code:1,…}`；业务错误 HTTP 200 `{code:0,msg}`；未登录 HTTP 401 `{code:401,msg:"请先登录"}`；限流 `{code:0,msg:"访问频繁,请稍后再试!"}`，每接口每 IP 每分钟 180 次。
+- token 是网站 API Keys 页面生成的 API Key（永久有效），放请求头 `token`。登录、登出、token 检测与刷新接口已下线。成功 `{code:1,…}`；业务错误 HTTP 200 `{code:0,msg}`；未登录 HTTP 401 `{code:401,msg:"请先登录"}`；限流 `{code:0,msg:"访问频繁,请稍后再试!"}`，每接口每 IP 每分钟 180 次。
 - 所有查询接口用 `request->param()` 取参，GET 和 POST 都收，所以"查询一律 GET"是安全的。
 - `product_type_id`：1 动态住宅流量不限时长、6 动态住宅流量包月、2 静态住宅普通、3 静态住宅原生、4 静态住宅运营商原生、8 数据中心。
 - `createBandwidthUpgradeOrder` 的 `pay_method` 固定 `balance`，用 overrides 的 `fixed` 加 `drop` 实现。

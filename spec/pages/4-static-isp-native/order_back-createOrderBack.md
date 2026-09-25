@@ -46,6 +46,10 @@ paths:
                   description: 退单备注
                   example: 退单备注
                   type: string
+              required:
+                - order_product_buy_id
+                - ids[]
+                - remark
             examples: {}
       responses:
         '200':

@@ -44,6 +44,10 @@ paths:
                   description: 退单备注
                   example: 退单备注
                   type: string
+              required:
+                - order_product_buy_id
+                - ids[]
+                - remark
             examples: {}
       responses:
         '200':
@@ -74,6 +78,11 @@ paths:
                   - msg
                   - time
                   - data
+              example:
+                code: 1
+                msg: 您的IP退单申请已提交，请您耐心等待！
+                time: '1764815463'
+                data: null
           headers: {}
           x-apifox-name: 成功
       security: []

@@ -56,28 +56,28 @@ paths:
           in: query
           description: 自定义用户名
           required: false
-          example: uvkex7OF62
+          example: ''
           schema:
             type: string
         - name: subAccountStart
           in: query
           description: 子账号区间搜索[初始]
           required: false
-          example: 100
+          example: 0
           schema:
             type: integer
         - name: subAccountEnd
           in: query
           description: 子账号区间搜索[结束]
           required: false
-          example: 200
+          example: 0
           schema:
             type: integer
         - name: ids
           in: query
           description: id集,多个以英文逗号分隔
           required: false
-          example: 44,15,45,133
+          example: ''
           schema:
             type: string
         - name: token
@@ -237,34 +237,6 @@ paths:
                   - msg
                   - time
                   - data
-              example:
-                code: 1
-                msg: 获取成功
-                time: '1697164784'
-                data:
-                  total: 1
-                  rows:
-                    - password: '111222'
-                      username: demo-824
-                      id: 824
-                      is_bind: 否
-                      bindUser: demo-824
-                      bindPassword: '111222'
-                      createTime: '2023-10-13 09:38:14'
-                      port: 5001
-                      agree: HTTP
-                      target: demo.demo.com
-                      ip: ''
-                      bill: 0
-                      is_diff: 0
-                      country: ''
-                      countryName: 全球
-                      state: ''
-                      city: ''
-                      type: '0'
-                      status: '0'
-                      limit_flow: 1
-                  baseFlow: 180.31
           headers: {}
           x-apifox-name: 成功
       security: []

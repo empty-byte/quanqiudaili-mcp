@@ -31,7 +31,7 @@ export function renderSetup(o: SetupOptions): string {
     `quanqiudaili-mcp 客户端配置片段${o.readonly ? '（只读模式）' : '（全部工具）'}`,
     '',
     `服务名 ${NAME}；命令 node；参数 ${JSON.stringify(args)}；环境变量 QQDL_TOKEN。`,
-    ...(o.token ? [] : ['下面所有片段里请把 你的token 换成登录接口返回的 token，做法见 README。']),
+    ...(o.token ? [] : ['下面所有片段里请把 你的token 换成网站 API Keys 页面生成的 API Key，做法见 README。']),
     'token 必须写在客户端配置里，终端里设置的环境变量不会传给客户端拉起的子进程。改完配置后重启对应客户端。',
     '',
     '== Claude Code ==',

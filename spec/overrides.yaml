@@ -1,6 +1,6 @@
 # 路径 → 工具名、中文描述、标注、拆分与参数修正。人工维护。
 # "文档缺陷兜底" 条目在文档站修好后删除。
-ignore:
+ignore: # 鉴权接口已随 API Key 改造从文档站下线，留着是为了万一恢复也不暴露
   - /externalapi/user/login
   - /externalapi/user/logout
   - /externalapi/token/check
@@ -296,4 +296,4 @@ tools:
       order_product_buy_id: { required: true }
       ids: { description: 要退的子账号 id 列表，取 sub_account_list 返回的 id 字段。这些子账号必须是同一个订单买出来的，订单看子账号列表里每条的 order_product_buy_id 字段 }
       "ids[]": { required: true }
-      remark: { required: true, description: 退单原因 } # 文档缺陷兜底：文档标为可选，后端 require
+      remark: { description: 退单原因 }
