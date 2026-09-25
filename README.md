@@ -24,7 +24,13 @@ npm ci
 
 `npm ci` 结束时会自动编译到 `dist/`。启动命令是 `node <安装目录>/dist/src/index.js`，只读加 `--readonly`，自动化脚本加 `--yes` 跳过写操作确认；也可以 `npm install -g .` 得到全局命令 `quanqiudaili-mcp`。
 
-方式二，npx，不用克隆也不用装：客户端配置里把命令写成 `npx -y quanqiudaili-mcp`（npm 包名），客户端第一次拉起时自动从 npm 下载并缓存，之后直接复用，本机要能访问 npm 源。`--readonly`、`--yes` 照样跟在后面。Windows 下若客户端报找不到 npx，把 `command` 改成 `cmd`，`args` 最前面加 `"/c", "npx"`。
+方式二，npx 直接从 GitHub 拉起，不用克隆也不用装：客户端配置里把命令写成
+
+```
+npx -y github:empty-byte/quanqiudaili-mcp
+```
+
+客户端第一次拉起时自动从 GitHub 取源码、装依赖并编译，之后缓存复用；本机要装有 `git`，并且能访问 GitHub，第一次会比较慢。`--readonly`、`--yes` 照样跟在后面。Windows 下若客户端报找不到 npx，把 `command` 改成 `cmd`，`args` 最前面加 `"/c", "npx"`。用 `setup --npx` 可以直接打印这种形式的配置片段。
 
 ## 获取 token
 

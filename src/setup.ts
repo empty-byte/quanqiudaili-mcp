@@ -3,13 +3,13 @@ export interface SetupOptions {
   indexPath: string;
   token?: string;
   readonly: boolean;
-  /** 用 npx -y 从 npm 拉起，不依赖本机安装位置 */
+  /** 用 npx -y 从 GitHub 拉起，不依赖本机安装位置；npm 上尚未发布，发了之后把 PACKAGE 换成包名即可 */
   npx?: boolean;
   platform: NodeJS.Platform;
 }
 
 const NAME = 'quanqiudaili';
-const PACKAGE = 'quanqiudaili-mcp';
+const PACKAGE = 'github:empty-byte/quanqiudaili-mcp';
 
 /** 生成各客户端可直接粘贴的配置片段，只产出文本，不碰任何文件 */
 export function renderSetup(o: SetupOptions): string {

@@ -30,11 +30,11 @@ describe('renderSetup', () => {
     expect(out).toContain('args = ["C:/tools/quanqiudaili-mcp/dist/src/index.js", "--readonly"]');
   });
 
-  it('--npx 时命令是 npx -y 包名，不含本机路径，--readonly 跟在后面', () => {
+  it('--npx 时命令是 npx -y github:仓库，不含本机路径，--readonly 跟在后面', () => {
     const out = renderSetup({ ...win, npx: true, readonly: true });
-    expect(out).toContain('claude mcp add -s user -e QQDL_TOKEN=abc quanqiudaili -- npx -y quanqiudaili-mcp --readonly');
-    expect(out).toContain(JSON.stringify({ mcpServers: { quanqiudaili: { command: 'npx', args: ['-y', 'quanqiudaili-mcp', '--readonly'], env } } }, null, 2));
-    expect(out).toContain('[mcp_servers.quanqiudaili]\ncommand = "npx"\nargs = ["-y", "quanqiudaili-mcp", "--readonly"]');
+    expect(out).toContain('claude mcp add -s user -e QQDL_TOKEN=abc quanqiudaili -- npx -y github:empty-byte/quanqiudaili-mcp --readonly');
+    expect(out).toContain(JSON.stringify({ mcpServers: { quanqiudaili: { command: 'npx', args: ['-y', 'github:empty-byte/quanqiudaili-mcp', '--readonly'], env } } }, null, 2));
+    expect(out).toContain('[mcp_servers.quanqiudaili]\ncommand = "npx"\nargs = ["-y", "github:empty-byte/quanqiudaili-mcp", "--readonly"]');
     expect(out).not.toContain('C:/tools');
   });
 
