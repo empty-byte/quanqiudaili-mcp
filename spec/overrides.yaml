@@ -6,6 +6,13 @@ ignore:
   - /externalapi/token/check
   - /externalapi/token/refresh
 
+derived: # 从已有工具派生、只取响应 data 里一个字段
+  - name: user_balance
+    from: /externalapi/user/getUserInfo
+    pick: money
+    title: 账户余额
+    description: 查询当前账号余额，data 直接是金额字符串，单位元。充值余额与赠送余额的拆分看 user_info。
+
 tools:
   # ===== 只读工具（--readonly 只暴露这些）=====
   /externalapi/user/getUserInfo:

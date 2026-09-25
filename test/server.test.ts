@@ -16,7 +16,8 @@ const backend = createServer((req, res) => {
   req.on('end', () => {
     hits.push({ url: req.url ?? '', method: req.method ?? '', body, token: req.headers.token as string | undefined });
     res.setHeader('content-type', 'application/json');
-    res.end(JSON.stringify({ code: 1, msg: 'ok', time: '1', data: { echo: true } }));
+    const data = req.url?.startsWith('/externalapi/user/getUserInfo') ? { money: '3347.42', give_money: '54.19' } : { echo: true };
+    res.end(JSON.stringify({ code: 1, msg: 'ok', time: '1', data }));
   });
 });
 
@@ -51,19 +52,19 @@ async function connect(args: string[], opts: ConnectOptions = {}): Promise<Clien
 const textOf = (r: { content?: unknown }) => ((r.content as { text: string }[])[0]).text;
 
 describe('stdio server', () => {
-  it('不带参数暴露全部 33 个工具，扣费与删除工具带 destructiveHint', async () => {
+  it('不带参数暴露全部 34 个工具，扣费与删除工具带 destructiveHint', async () => {
     const c = await connect([]);
     const { tools } = await c.listTools();
-    expect(tools).toHaveLength(33);
+    expect(tools).toHaveLength(34);
     const buy = tools.find(t => t.name === 'order_buy_time_ip');
     expect(buy?.annotations).toMatchObject({ readOnlyHint: false, destructiveHint: true, idempotentHint: false });
     await c.close();
   }, 20_000);
 
-  it('--readonly 只暴露 19 个只读工具与 1 个资源', async () => {
+  it('--readonly 只暴露 20 个只读工具与 1 个资源', async () => {
     const c = await connect(['--readonly']);
     const { tools } = await c.listTools();
-    expect(tools).toHaveLength(19);
+    expect(tools).toHaveLength(20);
     expect(tools.every(t => t.annotations?.readOnlyHint === true)).toBe(true);
     expect(tools.find(t => t.name === 'sub_account_list')?.inputSchema.required).toEqual(['product_type_id', 'page', 'pagesize']);
 
@@ -74,9 +75,16 @@ describe('stdio server', () => {
     await c.close();
   }, 20_000);
 
+  it('派生工具 user_balance 只返回 data 里的 money', async () => {
+    const c = await connect(['--readonly']);
+    const r = await c.callTool({ name: 'user_balance', arguments: {} });
+    expect(JSON.parse(textOf(r))).toEqual({ code: 1, msg: 'ok', data: '3347.42' });
+    await c.close();
+  }, 20_000);
+
   it('旧写法 query 等价于 --readonly', async () => {
     const c = await connect(['query']);
-    expect((await c.listTools()).tools).toHaveLength(19);
+    expect((await c.listTools()).tools).toHaveLength(20);
     await c.close();
   }, 20_000);
 

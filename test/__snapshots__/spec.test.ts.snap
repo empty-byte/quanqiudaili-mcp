@@ -1413,6 +1413,22 @@ exports[`spec/tools.json > 完整快照 1`] = `
     "title": "批量修改子账号备注",
   },
   {
+    "description": "查询当前账号余额，data 直接是金额字符串，单位元。充值余额与赠送余额的拆分看 user_info。",
+    "destructive": false,
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {},
+      "required": [],
+      "type": "object",
+    },
+    "method": "GET",
+    "name": "user_balance",
+    "path": "/externalapi/user/getUserInfo",
+    "pick": "money",
+    "readOnly": true,
+    "title": "账户余额",
+  },
+  {
     "description": "查询当前账号的基本信息与余额。",
     "destructive": false,
     "inputSchema": {

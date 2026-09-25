@@ -15,7 +15,9 @@ export interface ToolOverride {
   params?: Record<string, ParamOverride>;
 }
 export interface SplitPart extends ToolOverride { productTypeIds: number[] }
-export interface Overrides { ignore: string[]; tools: Record<string, ToolOverride | { split: SplitPart[] }> }
+/** 从已有工具派生、只取响应 data 里一个字段的工具，如账户余额只取 user_info 的 money */
+export interface DerivedTool { name: string; title: string; description: string; from: string; pick: string }
+export interface Overrides { ignore: string[]; tools: Record<string, ToolOverride | { split: SplitPart[] }>; derived?: DerivedTool[] }
 
 export const PRODUCT_LABELS: Record<number, string> = {
   1: '动态住宅流量（不限时长）', 6: '动态住宅流量（包月）', 2: '静态住宅（普通）',
@@ -274,6 +276,11 @@ export function buildTools(pages: Page[], ov: Overrides): ToolDef[] {
       tools.push(mergeGroup(group, o));
     }
   }
+  for (const d of ov.derived ?? []) {
+    const base = tools.filter(t => t.path === d.from);
+    if (base.length !== 1) throw new Error(`派生工具 ${d.name} 的来源 ${d.from} 对应 ${base.length} 个工具，需要恰好 1 个`);
+    tools.push({ ...base[0], name: d.name, title: d.title, description: d.description, pick: d.pick });
+  }
   const dup = tools.map(t => t.name).filter((n, i, a) => a.indexOf(n) !== i);
   if (dup.length) throw new Error(`工具名重复：${dup.join(', ')}`);
   return tools.sort((a, b) => a.name.localeCompare(b.name));
@@ -281,11 +288,14 @@ export function buildTools(pages: Page[], ov: Overrides): ToolDef[] {
 
 export function loadOverrides(yamlText: string): Overrides {
   const raw = parseYaml(yamlText) as Any;
-  const ov: Overrides = { ignore: raw?.ignore ?? [], tools: raw?.tools ?? {} };
+  const ov: Overrides = { ignore: raw?.ignore ?? [], tools: raw?.tools ?? {}, derived: raw?.derived ?? [] };
   const bad: string[] = [];
   for (const [path, o] of Object.entries(ov.tools)) {
     const parts: ToolOverride[] = 'split' in o ? o.split : [o];
     for (const p of parts) for (const f of ['name', 'title', 'description'] as const) if (!p[f]) bad.push(`${path} 缺 ${f}`);
+  }
+  for (const d of ov.derived ?? []) {
+    for (const f of ['name', 'title', 'description', 'from', 'pick'] as const) if (!d[f]) bad.push(`派生工具 ${d.name ?? '?'} 缺 ${f}`);
   }
   if (bad.length) throw new Error(`overrides.yaml 不完整：\n${bad.join('\n')}`);
   return ov;

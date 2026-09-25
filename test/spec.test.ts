@@ -11,7 +11,7 @@ const byName = (n: string) => {
 };
 
 describe('spec/tools.json', () => {
-  it('恰好 33 个工具，19 个只读，名字与设计文档一致', () => {
+  it('恰好 34 个工具，20 个只读，名字与设计文档一致', () => {
     expect(tools.map(t => t.name)).toEqual([
       'bandwidth_detail', 'bandwidth_monitoring_list', 'bandwidth_package_list', 'bandwidth_trend', 'bandwidth_upgrade_price',
       'dynamic_city_list', 'dynamic_country_list', 'dynamic_state_list',
@@ -20,9 +20,9 @@ describe('spec/tools.json', () => {
       'static_city_list', 'static_country_list', 'static_ip_range_list', 'static_region_stock', 'stock_check',
       'sub_account_add', 'sub_account_delete', 'sub_account_delete_batch', 'sub_account_flow_query', 'sub_account_limit_flow',
       'sub_account_list', 'sub_account_set_credentials', 'sub_account_set_limit_flow', 'sub_account_toggle_direct',
-      'sub_account_update', 'sub_account_update_batch', 'user_info',
+      'sub_account_update', 'sub_account_update_batch', 'user_balance', 'user_info',
     ]);
-    expect(tools.filter(t => t.readOnly)).toHaveLength(19);
+    expect(tools.filter(t => t.readOnly)).toHaveLength(20);
     for (const t of tools) expect(t.inputSchema.additionalProperties, t.name).toBe(false);
   });
 

@@ -2,7 +2,7 @@
 
 全球代理（quanqiudaili.com）对外 API 的 MCP 服务器。让 Claude Code、Claude Desktop 等 MCP 客户端可以查询子账号、库存、价格，并在你确认后下单、续费、改配置。
 
-默认暴露全部 33 个工具，含下单扣费、续费、删除子账号；加 `--readonly` 只暴露 19 个只读工具，装了不会产生任何费用。新建、修改、下单、续费、删除这 14 个写操作执行前都会先向你确认（见下文"写操作确认"），AI 替不了你点；不需要写操作的人直接配 `--readonly`。
+默认暴露全部 34 个工具，含下单扣费、续费、删除子账号；加 `--readonly` 只暴露 20 个只读工具，装了不会产生任何费用。新建、修改、下单、续费、删除这 14 个写操作执行前都会先向你确认（见下文"写操作确认"），AI 替不了你点；不需要写操作的人直接配 `--readonly`。
 
 业务逻辑、参数校验、鉴权、扣费全部在后端完成，本项目只是一个 HTTP 客户端。
 
@@ -108,6 +108,7 @@ npx @modelcontextprotocol/inspector -e QQDL_TOKEN=你的token -- node <安装目
 | 工具 | 说明 |
 |---|---|
 | user_info | 账号信息与余额 |
+| user_balance | 账户余额，data 直接是金额 |
 | product_unit_price | 各产品单价、折扣、按国家自定义价 |
 | product_list | 产品信息 |
 | dynamic_country_list / dynamic_state_list / dynamic_city_list | 动态产品 1、6 的国家、州、城市 |

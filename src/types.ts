@@ -18,6 +18,8 @@ export interface ToolDef {
   path: string;
   /** 固定附加的参数，例如 pay_method=balance */
   fixed?: Record<string, string | number>;
+  /** 派生工具只返回响应 data 里的这个字段，例如账户余额只取 money */
+  pick?: string;
   inputSchema: {
     type: 'object';
     properties: Record<string, JsonSchema>;

@@ -44,6 +44,14 @@ describe('callApi', () => {
     expect(JSON.parse(textOf(r))).toEqual({ code: 1, msg: 'ok', data: { balance: 9 } });
   });
 
+  it('带 pick 的派生工具只返回 data 里的那个字段，缺字段时为 null', async () => {
+    const t = tool({ pick: 'money' });
+    const r = await callApi(t, {}, cfg, stub(200, JSON.stringify({ code: 1, msg: 'ok', data: { money: '3347.42', give_money: '54.19' } })));
+    expect(JSON.parse(textOf(r))).toEqual({ code: 1, msg: 'ok', data: '3347.42' });
+    const r2 = await callApi(t, {}, cfg, stub(200, JSON.stringify({ code: 1, msg: 'ok', data: [] })));
+    expect(JSON.parse(textOf(r2))).toEqual({ code: 1, msg: 'ok', data: null });
+  });
+
   it('POST 用表单编码并附加 fixed 参数', async () => {
     const seen: Seen = {};
     await callApi(tool({ method: 'POST', fixed: { pay_method: 'balance' } }), { page: 2 }, cfg,

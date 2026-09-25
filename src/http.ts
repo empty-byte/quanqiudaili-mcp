@@ -39,6 +39,9 @@ function parseBody(raw: string): Body | undefined {
   }
 }
 
+const pickField = (data: unknown, key: string): unknown =>
+  (data && typeof data === 'object' ? (data as Record<string, unknown>)[key] : undefined) ?? null;
+
 export async function callApi(
   tool: ToolDef,
   args: Record<string, unknown>,
@@ -74,7 +77,7 @@ export async function callApi(
   if (!body || !Number.isFinite(code)) return text(`HTTP ${status}，响应格式异常：${raw.slice(0, 200)}`, true);
 
   const msg = String(body.msg ?? '');
-  if (code === 1) return text(JSON.stringify({ code, msg, data: body.data ?? null }));
+  if (code === 1) return text(JSON.stringify({ code, msg, data: tool.pick ? pickField(body.data, tool.pick) : body.data ?? null }));
   if (code === 401 || code === 403 || status === 401) {
     return text(`token 无效或已过期（${msg}）。请重新调用 externalapi/user/login 获取 token，更新 QQDL_TOKEN 后重启本 MCP。`, true);
   }

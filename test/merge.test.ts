@@ -122,6 +122,26 @@ describe('buildTools', () => {
   });
 });
 
+describe('派生工具', () => {
+  it('从来源工具复制并带上 pick；来源不存在或不唯一时报错', () => {
+    const pages = [page('a', '/info', undefined, [])];
+    const o = { ignore: [], tools: { '/info': ov('user_info', { readOnly: true }) }, derived: [{ name: 'user_balance', title: '余额', description: 'd', from: '/info', pick: 'money' }] };
+    const tools = buildTools(pages, o);
+    expect(tools.map(t => t.name)).toEqual(['user_balance', 'user_info']);
+    expect(tools[0]).toMatchObject({ path: '/info', readOnly: true, pick: 'money', title: '余额', description: 'd' });
+    expect(tools[1].pick).toBeUndefined();
+    expect(() => buildTools(pages, { ...o, derived: [{ ...o.derived[0], from: '/nope' }] })).toThrow(/对应 0 个工具/);
+  });
+
+  it('loadOverrides 校验派生工具的字段', () => {
+    expect(() => loadOverrides(`tools: {}
+derived:
+  - name: x
+    from: /p
+`)).toThrow(/派生工具 x 缺 title/);
+  });
+});
+
 describe('parsePage', () => {
   it('提取 path、summary、固定产品类型，跳过 header 参数，合并 query 与 body', () => {
     const md = [

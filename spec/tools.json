@@ -1410,6 +1410,22 @@
     }
   },
   {
+    "name": "user_balance",
+    "title": "账户余额",
+    "description": "查询当前账号余额，data 直接是金额字符串，单位元。充值余额与赠送余额的拆分看 user_info。",
+    "readOnly": true,
+    "destructive": false,
+    "method": "GET",
+    "path": "/externalapi/user/getUserInfo",
+    "inputSchema": {
+      "type": "object",
+      "properties": {},
+      "required": [],
+      "additionalProperties": false
+    },
+    "pick": "money"
+  },
+  {
     "name": "user_info",
     "title": "账号信息",
     "description": "查询当前账号的基本信息与余额。",

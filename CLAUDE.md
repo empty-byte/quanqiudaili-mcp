@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 项目是什么
 
-全球代理（quanqiudaili.com）对外 HTTP 接口 `externalapi` 的 MCP 服务器。TypeScript，官方 MCP SDK v2（`@modelcontextprotocol/server` 2.x），仅 stdio。不带参数暴露全部 33 个工具（含下单扣费与删除），`--readonly` 只暴露 19 个只读工具，旧参数 `query`/`manage` 仍接受；14 个写操作工具执行前先向用户确认（`src/confirm.ts`），`--yes` 关闭确认；`setup` 子命令打印各客户端的配置片段，不写文件。参数业务校验、鉴权、扣费都在 PHP 后端，本项目只是 HTTP 客户端，不改后端。面向其他使用者，环境要求与命令示例不以某台开发机为准。
+全球代理（quanqiudaili.com）对外 HTTP 接口 `externalapi` 的 MCP 服务器。TypeScript，官方 MCP SDK v2（`@modelcontextprotocol/server` 2.x），仅 stdio。不带参数暴露全部 34 个工具（含下单扣费与删除），`--readonly` 只暴露 20 个只读工具，旧参数 `query`/`manage` 仍接受；14 个写操作工具执行前先向用户确认（`src/confirm.ts`），`--yes` 关闭确认；`setup` 子命令打印各客户端的配置片段，不写文件。参数业务校验、鉴权、扣费都在 PHP 后端，本项目只是 HTTP 客户端，不改后端。面向其他使用者，环境要求与命令示例不以某台开发机为准。
 
 ## 常用命令
 
@@ -28,7 +28,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 改工具定义的正确姿势
 
-不要手改 `spec/tools.json`。工具名、中文描述、只读与破坏性标注、按产品拆分、参数类型/描述/枚举/必填的修正都在 `spec/overrides.yaml`，按接口路径做 key；改完 `npm run build-spec`，再 `npm test`，快照变化合理就 `-u`。`test/spec.test.ts` 会校验 `tools.json` 与当前生成结果一致，忘了重生成会红。
+不要手改 `spec/tools.json`。工具名、中文描述、只读与破坏性标注、按产品拆分、参数类型/描述/枚举/必填的修正都在 `spec/overrides.yaml`，按接口路径做 key；改完 `npm run build-spec`，再 `npm test`，快照变化合理就 `-u`。`test/spec.test.ts` 会校验 `tools.json` 与当前生成结果一致，忘了重生成会红。同一接口只取 data 里一个字段的派生工具（如 `user_balance` 取 `user_info` 的 `money`）写在 overrides 顶层 `derived`，生成时从来源工具复制并带上 `pick`，运行期 `callApi` 只返回该字段。
 
 合并规则要点（细节见 `docs/2026-09-24-设计方案.md` 第 3 节）：同路径各页参数取并集；顶层参数要在全部变体页都必填才必填，部分必填写进描述；`product_type_id` 强制 integer，枚举取各页"此处固定为 N"；`name[0][key]` 转对象数组，`name[]` 转数组；描述去掉 HTML 标签。文档站新增接口会让生成失败并列出路径，把它加进 overrides 或 `ignore`。文档缺陷的兜底条目在 overrides 里带"文档缺陷兜底"注释，并登记到设计文档第 11 节，文档站修好后删除。
 
