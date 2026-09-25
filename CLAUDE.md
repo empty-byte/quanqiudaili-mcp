@@ -24,7 +24,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 运行期：`src/index.ts` 只读 `spec/tools.json`，用 `fromJsonSchema()` 把每个工具的 JSON Schema 原样注册给 SDK，SDK 用内置 Ajv 在调用前校验（所有对象都 `additionalProperties: false`，写错参数名会被拒绝而不是发给后端）。`src/http.ts` 把参数经 `src/form.ts` 编成 `application/x-www-form-urlencoded`（PHP 括号格式 `content[0][id]=…`），只读工具 GET、其余 POST，每个请求都附带参数 `is_mcp_send=1` 和请求头 `User-Agent: quanqiudaili mcp` 供后端识别 MCP 流量，再把后端 `{code,msg,time,data}` 映射成 MCP 结果。`--readonly` 就是按 `readOnly` 过滤同一份工具表。运行期不 import zod、不解析 YAML、不联网拉文档。
 
-写操作确认（`src/confirm.ts`）：非只读工具的处理器被 `withConfirm` 包一层。客户端声明了 elicitation 能力（2025 版协议看连接初始化时的能力，2026 版看每个请求信封里的 `CLIENT_CAPABILITIES_META_KEY`）就返回 `inputRequired(...)` 让客户端弹出操作预览，用户点确认后 SDK 重入处理器，从 `ctx.mcpReq.inputResponses` 读到同意才调后端，明确 decline 才算取消；不支持的客户端，以及声明支持却没显示弹窗就回了 cancel 或未勾选的客户端（Claude Code 的 VS Code 插件就这样），都退到确认码：返回预览和一次性 `confirm_token`（绑定工具与参数、5 分钟有效），模型转述给用户后带码重调。带了 `confirm_token` 的调用不再弹窗，直接校验确认码。为此写工具的 schema 在注册时多一个可选 `confirm_token`，`spec/tools.json` 本身不含它。预览文案由 `preview()` 从工具标题、描述首句和参数拼出，不查价、不查余额。
+写操作确认（`src/confirm.ts`）：非只读工具的处理器被 `withConfirm` 包一层。客户端声明了 elicitation 能力（2025 版协议看连接初始化时的能力，2026 版看每个请求信封里的 `CLIENT_CAPABILITIES_META_KEY`）就返回 `inputRequired(...)` 让客户端弹出操作预览，用户点确认后 SDK 重入处理器，从 `ctx.mcpReq.inputResponses` 读到 accept 且 confirm=true 才调后端；弹窗没拿到同意（decline、cancel、未勾选）和不支持弹窗的客户端都退到确认码：返回预览和一次性 `confirm_token`（绑定工具与参数、5 分钟有效），模型转述给用户后带码重调。弹窗的拒绝不直接当取消，是因为 Claude Code 的 VS Code 插件声明支持 elicitation 却不显示弹窗就回 decline，当取消会让写操作在它上面永远做不成。带了 `confirm_token` 的调用不再弹窗，直接校验确认码。为此写工具的 schema 在注册时多一个可选 `confirm_token`，`spec/tools.json` 本身不含它。预览文案由 `preview()` 从工具标题、描述首句和参数拼出，不查价、不查余额。
+
+续费兜底（`src/renew.ts`）：`order_renew` 的处理器外面套了 `withRenewDefaults`，在确认之前先按 ids 查 `sub_account_list`，`is_renew` 一律沿用当前值（工具不暴露这个参数，续费不改开关），`renew_with_bandwidth` 没传才沿用；子账号之间设置不一致就报错让分开续费。预览里看到的就是补齐后真正要发的值。原因见下面后端事实里续费接口那条。
 
 ## 改工具定义的正确姿势
 
@@ -38,6 +40,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - 所有查询接口用 `request->param()` 取参，GET 和 POST 都收，所以"查询一律 GET"是安全的。
 - `product_type_id`：1 动态住宅流量不限时长、6 动态住宅流量包月、2 静态住宅普通、3 静态住宅原生、4 静态住宅运营商原生、8 数据中心。
 - `createBandwidthUpgradeOrder` 的 `pay_method` 固定 `balance`，用 overrides 的 `fixed` 加 `drop` 实现。
+- `createRenewProductBuyOrder` 接受文档没写的 `is_renew`（0/1，不传当 0），并把 `is_renew`、`renew_with_bandwidth`、`renew_timelen` 写回子账号的自动续费设置（`ProductPackage.php` 续费流程），照文档直接调一次就会把用户开着的自动续费关掉。
 - 子账号 id 类参数一律 string（数组元素也是），`test/spec.test.ts` 有断言；`subAccountStart`/`subAccountEnd` 与 `order_product_buy_id` 保持 integer。
 
 ## 规则

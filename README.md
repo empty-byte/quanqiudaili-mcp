@@ -77,7 +77,7 @@ Claude Desktop 的 `claude_desktop_config.json`：
 
 新建、修改、下单、续费、升级、退单、删除这 14 个工具执行前都会先向你确认：
 
-- 客户端支持 MCP 的弹窗确认（elicitation）时，会弹出操作预览（工具、参数、产品名），你点确认后才请求后端，点拒绝则什么都不发生。Inspector、VS Code 支持；其它客户端以实际是否弹窗为准。有的客户端（如 Claude Code 的 VS Code 插件）声明支持却不显示弹窗，这时会自动退到下面的确认码方式。
+- 客户端支持 MCP 的弹窗确认（elicitation）时，会弹出操作预览（工具、参数、产品名），你点确认后才请求后端。Inspector、VS Code 支持；其它客户端以实际是否弹窗为准。弹窗没得到确认（你点了拒绝或关掉，或者客户端声明支持却没显示弹窗，Claude Code 的 VS Code 插件目前就这样）都会退到下面的确认码方式，由助手在对话里再向你确认一次，你不同意就不执行。
 - 客户端不支持时，第一次调用只返回预览和一个 5 分钟有效、只能用一次的确认码，AI 要把预览告诉你，你同意后它再带确认码用同样参数调一次。这一路靠 AI 转述，弱于弹窗。
 - 这层确认与客户端自带的工具权限弹窗是叠加的，可能问两次。
 - 自动化脚本不想被打断，启动参数加 `--yes`，写操作直接执行。`--readonly` 模式没有写工具，不涉及确认。
@@ -128,7 +128,7 @@ npx @modelcontextprotocol/inspector -e QQDL_TOKEN=你的token -- node <安装目
 | order_buy_dynamic | 购买动态住宅流量（产品 1、6），扣费 |
 | order_buy_time_ip | 购买时长 IP（产品 2、3、4、8），扣费 |
 | order_buy_test_ip | 购买时长测试 IP，扣费 |
-| order_renew | 续费时长 IP，扣费 |
+| order_renew | 续费时长 IP，扣费；不改子账号的自动续费开关，不传 renew_with_bandwidth 时沿用当前设置 |
 | order_bandwidth_upgrade | 带宽升级下单，余额支付 |
 | order_refund_apply | 申请退单 |
 

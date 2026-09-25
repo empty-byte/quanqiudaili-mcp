@@ -270,12 +270,12 @@ tools:
   /externalapi/product_order/createRenewProductBuyOrder:
     name: order_renew
     title: 续费时长 IP
-    description: 会从账户余额扣费。为时长类子账号续费，sub_account_ids 为逗号分隔的子账号 id。
+    description: 会从账户余额扣费。为时长类子账号续费，sub_account_ids 为逗号分隔的子账号 id。不会改动子账号的自动续费开关；renew_with_bandwidth 不传时沿用各子账号当前设置，子账号之间设置不一致时请分开续费。
     destructive: true
     params: # 文档缺陷兜底：旧页只把 product_type_id 标为必填
       timelen: { required: true, enum: [0, 1, 2, 3, 4], description: 续费时长：0=7天，1=30天，2=90天，3=180天，4=360天 }
       sub_account_ids: { required: true, description: 要续费的子账号 id，多个用英文逗号连接，一次最多 300 个 }
-      renew_with_bandwidth: { enum: [0, 1] }
+      renew_with_bandwidth: { enum: [0, 1], description: 续费时是否包含带宽：0=不包含，1=包含。不传则沿用子账号当前的自动续费带宽设置；传了会同时改掉该设置 }
   /externalapi/product_order/createBandwidthUpgradeOrder:
     name: order_bandwidth_upgrade
     title: 带宽升级下单

@@ -577,7 +577,7 @@ exports[`spec/tools.json > 完整快照 1`] = `
     "title": "申请退单",
   },
   {
-    "description": "会从账户余额扣费。为时长类子账号续费，sub_account_ids 为逗号分隔的子账号 id。",
+    "description": "会从账户余额扣费。为时长类子账号续费，sub_account_ids 为逗号分隔的子账号 id。不会改动子账号的自动续费开关；renew_with_bandwidth 不传时沿用各子账号当前设置，子账号之间设置不一致时请分开续费。",
     "destructive": true,
     "inputSchema": {
       "additionalProperties": false,
@@ -593,7 +593,7 @@ exports[`spec/tools.json > 完整快照 1`] = `
           "type": "integer",
         },
         "renew_with_bandwidth": {
-          "description": "续费时是否包含带宽:0=不包含,1=包含",
+          "description": "续费时是否包含带宽：0=不包含，1=包含。不传则沿用子账号当前的自动续费带宽设置；传了会同时改掉该设置",
           "enum": [
             0,
             1,

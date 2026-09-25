@@ -76,20 +76,12 @@ describe('withConfirm', () => {
     expect(exec).toHaveBeenCalledWith(args);
   });
 
-  it('客户端支持弹窗：明确拒绝就取消，不执行', async () => {
+  it('客户端支持弹窗但没拿到同意（拒绝、取消、没勾选）：退到确认码并说明，带码重调才执行', async () => {
     const exec = vi.fn(async () => ok);
     const h = withConfirm(tool, { supportsElicitation: () => true, exec, tokens: new ConfirmTokens() });
-    const r = await h(args, ctxWith({ confirm: { action: 'decline' } }));
-    expect(r).toMatchObject({ isError: true });
-    expect(textOf(r)).toContain('取消');
-    expect(exec).not.toHaveBeenCalled();
-  });
-
-  it('客户端支持弹窗但回了取消或没勾选：退到确认码，带码重调才执行', async () => {
-    const exec = vi.fn(async () => ok);
-    const h = withConfirm(tool, { supportsElicitation: () => true, exec, tokens: new ConfirmTokens() });
-    for (const [i, answer] of [{ action: 'cancel' }, { action: 'accept', content: { confirm: false } }].entries()) {
+    for (const [i, answer] of [{ action: 'decline' }, { action: 'cancel' }, { action: 'accept', content: { confirm: false } }].entries()) {
       const r = await h(args, ctxWith({ confirm: answer }));
+      expect(textOf(r)).toContain('弹窗没有得到确认');
       expect(textOf(r)).toContain('待确认');
       expect(exec).toHaveBeenCalledTimes(i);
       const token = textOf(r).match(/confirm_token=([0-9a-f]+)/)?.[1];

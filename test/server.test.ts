@@ -16,7 +16,12 @@ const backend = createServer((req, res) => {
   req.on('end', () => {
     hits.push({ url: req.url ?? '', method: req.method ?? '', body, token: req.headers.token as string | undefined });
     res.setHeader('content-type', 'application/json');
-    const data = req.url?.startsWith('/externalapi/user/getUserInfo') ? { money: '3347.42', give_money: '54.19' } : { echo: true };
+    const url = new URL(req.url ?? '/', 'http://fake');
+    const ids = url.searchParams.get('ids');
+    const data = url.pathname === '/externalapi/user/getUserInfo' ? { money: '3347.42', give_money: '54.19' }
+      // 按 ids 查子账号时返回自动续费设置，给 order_renew 续费前的查询用
+      : ids ? { total: ids.split(',').length, rows: ids.split(',').map(id => ({ id, is_renew: '1', renew_with_bandwidth: '0' })) }
+      : { echo: true };
     res.end(JSON.stringify({ code: 1, msg: 'ok', time: '1', data }));
   });
 });
@@ -177,12 +182,13 @@ describe('写操作确认', () => {
     await c.close();
   }, 20_000);
 
-  it('用户在弹窗里拒绝：不请求后端，返回取消', async () => {
+  it('弹窗回了拒绝：不请求后端，退到确认码', async () => {
     const c = await connect([], { elicit: 'decline' });
     hits.length = 0;
     const r = await c.callTool(WRITE);
-    expect(r.isError).toBe(true);
-    expect(textOf(r)).toContain('取消');
+    expect(r.isError).toBeFalsy();
+    expect(textOf(r)).toContain('弹窗没有得到确认');
+    expect(textOf(r)).toMatch(/confirm_token=[0-9a-f]+/);
     expect(hits).toHaveLength(0);
     await c.close();
   }, 20_000);
@@ -206,6 +212,19 @@ describe('写操作确认', () => {
     const reused = await c.callTool({ ...WRITE, arguments: { ...WRITE.arguments, confirm_token: token } });
     expect(reused.isError).toBe(true);
     expect(hits).toHaveLength(1);
+    await c.close();
+  }, 20_000);
+
+  it('order_renew 先查子账号当前的自动续费设置再确认，预览与后端请求都带上 is_renew', async () => {
+    const messages: string[] = [];
+    const c = await connect([], { elicit: 'accept', messages });
+    hits.length = 0;
+    const r = await c.callTool({ name: 'order_renew', arguments: { product_type_id: 3, timelen: 0, sub_account_ids: '77,76' } });
+    expect(r.isError).toBeFalsy();
+    expect(messages[0]).toContain('- is_renew：1');
+    expect(hits.map(h => h.method)).toEqual(['GET', 'GET', 'POST']);
+    expect(decodeURIComponent(hits[0].url)).toBe('/externalapi/device/accountList?product_type_id=3&ids=77,76&page=1&pagesize=100&is_mcp_send=1');
+    expect(decodeURIComponent(hits[2].body)).toBe('product_type_id=3&timelen=0&sub_account_ids=77,76&is_renew=1&renew_with_bandwidth=0&is_mcp_send=1');
     await c.close();
   }, 20_000);
 

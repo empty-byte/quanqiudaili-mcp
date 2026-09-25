@@ -77,6 +77,7 @@ export function withConfirm(tool: ToolDef, deps: ConfirmDeps) {
       return deps.exec(args);
     }
 
+    let note = '';
     if (deps.supportsElicitation(ctx)) {
       const answer = inputResponse(ctx.mcpReq.inputResponses, 'confirm');
       if (answer.kind === 'missing') {
@@ -94,14 +95,14 @@ export function withConfirm(tool: ToolDef, deps: ConfirmDeps) {
         });
       }
       if (answer.kind === 'elicit' && answer.action === 'accept' && answer.content?.confirm === true) return deps.exec(args);
-      if (answer.kind === 'elicit' && answer.action === 'decline') return text('用户在弹窗里拒绝了，操作已取消，没有请求后端。', true);
-      // 有的客户端（如 Claude Code 的 VS Code 插件）声明能弹窗，却不显示就直接回了未确认，
-      // 这里一律拒绝会让写操作永远做不成；除明确拒绝外都退到确认码，让用户在对话里确认
+      // 有的客户端（如 Claude Code 的 VS Code 插件）声明能弹窗，却不显示就直接回 decline，
+      // 把它当拒绝会让写操作在这类客户端永远做不成；弹窗没拿到同意就一律退到确认码，让用户在对话里确认
+      note = '弹窗没有得到确认（可能客户端没显示弹窗，也可能用户拒绝了）。';
     }
 
     const token = deps.tokens.issue(tool.name, args);
     return text(
-      `待确认，尚未执行。\n${preview(tool, args)}\n\n请把以上内容原样告诉用户；用户明确同意后，用相同参数加 confirm_token=${token} 再调用一次（5 分钟内有效，只能用一次）。用户不同意就不要再调。`,
+      `${note}待确认，尚未执行。\n${preview(tool, args)}\n\n请把以上内容原样告诉用户；用户明确同意后，用相同参数加 confirm_token=${token} 再调用一次（5 分钟内有效，只能用一次）。用户不同意就不要再调。`,
       false,
     );
   };
