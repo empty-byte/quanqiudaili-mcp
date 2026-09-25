@@ -91,7 +91,7 @@ describe('stdio server', () => {
 
     await c.callTool({
       name: 'sub_account_set_credentials',
-      arguments: { product_type_id: 1, content: [{ id: 32, customUsername: 'user0001', customPassword: 'pass0001' }] },
+      arguments: { product_type_id: 1, content: [{ id: '32', customUsername: 'user0001', customPassword: 'pass0001' }] },
     });
     expect(hits[1].method).toBe('POST');
     expect(hits[1].url).toBe('/externalapi/device/batchUpdateSubAccountUsernamePassword');

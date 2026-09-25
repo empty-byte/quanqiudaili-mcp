@@ -38,6 +38,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - 所有查询接口用 `request->param()` 取参，GET 和 POST 都收，所以"查询一律 GET"是安全的。
 - `product_type_id`：1 动态住宅流量不限时长、6 动态住宅流量包月、2 静态住宅普通、3 静态住宅原生、4 静态住宅运营商原生、8 数据中心。
 - `createBandwidthUpgradeOrder` 的 `pay_method` 固定 `balance`，用 overrides 的 `fixed` 加 `drop` 实现。
+- 子账号 id 类参数一律 string（数组元素也是），`test/spec.test.ts` 有断言；`subAccountStart`/`subAccountEnd` 与 `order_product_buy_id` 保持 integer。
 
 ## 规则
 

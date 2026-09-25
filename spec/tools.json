@@ -991,7 +991,7 @@
           ]
         },
         "id": {
-          "type": "integer",
+          "type": "string",
           "description": "子账号 id，取 sub_account_list 返回的 id 字段"
         }
       },
@@ -1053,8 +1053,8 @@
           ]
         },
         "subAccount": {
-          "type": "integer",
-          "description": "子账号id"
+          "type": "string",
+          "description": "子账号 id，取 sub_account_list 返回的 id 字段"
         },
         "month": {
           "type": "string",
@@ -1089,8 +1089,8 @@
           ]
         },
         "id": {
-          "type": "integer",
-          "description": "子账号 id"
+          "type": "string",
+          "description": "子账号 id，取 sub_account_list 返回的 id 字段"
         }
       },
       "required": [
@@ -1214,7 +1214,7 @@
             "type": "object",
             "properties": {
               "id": {
-                "type": "integer",
+                "type": "string",
                 "description": "子账号 id，取 sub_account_list 返回的 id 字段"
               },
               "customUsername": {
@@ -1263,8 +1263,8 @@
           ]
         },
         "id": {
-          "type": "integer",
-          "description": "子账号id"
+          "type": "string",
+          "description": "子账号 id，取 sub_account_list 返回的 id 字段"
         },
         "limit_flow": {
           "type": "integer",
@@ -1359,8 +1359,8 @@
           ]
         },
         "id": {
-          "type": "integer",
-          "description": "子账号id"
+          "type": "string",
+          "description": "子账号 id，取 sub_account_list 返回的 id 字段"
         },
         "remark": {
           "type": "string",

@@ -113,13 +113,14 @@ tools:
     readOnly: true
     params:
       month: { description: 查询的月份，格式 YYYY-MM，如 2026-09 }
+      subAccount: { type: string, description: 子账号 id，取 sub_account_list 返回的 id 字段 }
   /externalapi/tool/accountLimitFlow:
     name: sub_account_limit_flow
     title: 子账号流量上限
     description: 查询动态子账号的流量上限设置与已用量。
     readOnly: true
-    params: # 文档缺陷兜底：两页都把 id 写成 string、非必填、无描述
-      id: { type: integer, required: true, description: 子账号 id }
+    params: # 文档缺陷兜底：两页都把 id 标成非必填、无描述
+      id: { type: string, required: true, description: 子账号 id，取 sub_account_list 返回的 id 字段 }
   /externalapi/bandwidth/getBandwidthList:
     name: bandwidth_package_list
     title: 带宽套餐列表
@@ -179,6 +180,8 @@ tools:
     name: sub_account_update
     title: 修改子账号备注
     description: 修改单个子账号的备注。
+    params:
+      id: { type: string, description: 子账号 id，取 sub_account_list 返回的 id 字段 }
   /externalapi/device/accountUpdateList:
     name: sub_account_update_batch
     title: 批量修改子账号备注
@@ -192,8 +195,7 @@ tools:
     params:
       product_type_id: { type: integer }
       content: { description: 要设置的子账号列表，每项给子账号 id 和新的用户名、密码，这些子账号都要属于 product_type_id 这个产品 }
-      "content[0][id]": { type: integer, description: 子账号 id，取 sub_account_list 返回的 id 字段 }
-      "content[1][id]": { type: integer }
+      "content[0][id]": { type: string, description: 子账号 id，取 sub_account_list 返回的 id 字段 }
   /externalapi/device/portEnableUpdateList:
     name: sub_account_toggle_direct
     title: 批量开关直连
@@ -204,8 +206,8 @@ tools:
     name: sub_account_set_limit_flow
     title: 设置子账号流量上限
     description: 为动态子账号设置流量上限；limit_flow 为 0 表示取消限制。
-    params: # 文档缺陷兜底：新页全部为 string，type 的描述有误
-      id: { type: integer }
+    params: # 文档缺陷兜底：新页 limit_flow、type、timelen 全为 string，type 的描述有误
+      id: { type: string, description: 子账号 id，取 sub_account_list 返回的 id 字段 }
       limit_flow: { type: integer, description: 流量上限，单位 GB，0 到 1000000；0 = 取消限制并删除限流记录 }
       type: { type: integer, enum: [0, 1], description: 限流类型：0 = 永久，按子账号累计用量（默认）；1 = 周期 }
       timelen: { type: integer, enum: [0, 1, 2, 3, 4], description: 周期：0 天、1 周、2 月、3 季度、4 年；type=1 时必填，type=0 时忽略 }
@@ -215,7 +217,7 @@ tools:
     description: 不可恢复。删除一个动态子账号。
     destructive: true
     params:
-      id: { type: integer, description: 子账号 id，取 sub_account_list 返回的 id 字段 }
+      id: { type: string, description: 子账号 id，取 sub_account_list 返回的 id 字段 }
   /externalapi/device/accountDeleteList:
     name: sub_account_delete_batch
     title: 批量删除子账号

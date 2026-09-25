@@ -982,7 +982,7 @@ exports[`spec/tools.json > 完整快照 1`] = `
       "properties": {
         "id": {
           "description": "子账号 id，取 sub_account_list 返回的 id 字段",
-          "type": "integer",
+          "type": "string",
         },
         "product_type_id": {
           "description": "产品类型：1=动态住宅流量（不限时长），6=动态住宅流量（包月）",
@@ -1055,8 +1055,8 @@ exports[`spec/tools.json > 完整快照 1`] = `
           "type": "integer",
         },
         "subAccount": {
-          "description": "子账号id",
-          "type": "integer",
+          "description": "子账号 id，取 sub_account_list 返回的 id 字段",
+          "type": "string",
         },
       },
       "required": [
@@ -1079,8 +1079,8 @@ exports[`spec/tools.json > 完整快照 1`] = `
       "additionalProperties": false,
       "properties": {
         "id": {
-          "description": "子账号 id",
-          "type": "integer",
+          "description": "子账号 id，取 sub_account_list 返回的 id 字段",
+          "type": "string",
         },
         "product_type_id": {
           "description": "产品类型：1=动态住宅流量（不限时长），6=动态住宅流量（包月）",
@@ -1209,7 +1209,7 @@ exports[`spec/tools.json > 完整快照 1`] = `
               },
               "id": {
                 "description": "子账号 id，取 sub_account_list 返回的 id 字段",
-                "type": "integer",
+                "type": "string",
               },
             },
             "required": [
@@ -1253,8 +1253,8 @@ exports[`spec/tools.json > 完整快照 1`] = `
       "additionalProperties": false,
       "properties": {
         "id": {
-          "description": "子账号id",
-          "type": "integer",
+          "description": "子账号 id，取 sub_account_list 返回的 id 字段",
+          "type": "string",
         },
         "limit_flow": {
           "description": "流量上限，单位 GB，0 到 1000000；0 = 取消限制并删除限流记录",
@@ -1349,8 +1349,8 @@ exports[`spec/tools.json > 完整快照 1`] = `
       "additionalProperties": false,
       "properties": {
         "id": {
-          "description": "子账号id",
-          "type": "integer",
+          "description": "子账号 id，取 sub_account_list 返回的 id 字段",
+          "type": "string",
         },
         "product_type_id": {
           "description": "产品类型：1=动态住宅流量（不限时长），6=动态住宅流量（包月）",

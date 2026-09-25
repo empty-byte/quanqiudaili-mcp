@@ -57,7 +57,7 @@ describe('spec/tools.json', () => {
       type: 'array',
       items: { type: 'object', required: ['id', 'customUsername', 'customPassword'] },
     });
-    expect(cred.inputSchema.properties.content.items?.properties?.id.type).toBe('integer');
+    expect(cred.inputSchema.properties.content.items?.properties?.id.type).toBe('string');
     expect(cred.inputSchema.required).toEqual(['product_type_id', 'content']);
 
     expect(byName('order_refund_apply').inputSchema.properties.ids).toMatchObject({ type: 'array', items: { type: 'string' } });
@@ -85,6 +85,18 @@ describe('spec/tools.json', () => {
     expect(limit.inputSchema.properties.timelen.type).toBe('integer');
     expect(byName('sub_account_limit_flow').inputSchema.required).toEqual(['product_type_id', 'id']);
     expect([...byName('order_renew').inputSchema.required].sort()).toEqual(['product_type_id', 'sub_account_ids', 'timelen']);
+  });
+
+  it('子账号 id 类参数一律 string，数组元素也是；id 区间边界与订单号除外', () => {
+    const idLike = (k: string) => /subAccount|sub_account|^ids?$/i.test(k) && !/Start$|End$|Name$/.test(k);
+    for (const t of tools) {
+      for (const [k, v] of Object.entries(t.inputSchema.properties)) {
+        if (!idLike(k)) continue;
+        const leaf = v.type === 'array' ? v.items : v;
+        if (leaf?.type === 'object') expect(leaf.properties?.id?.type, `${t.name}.${k}[].id`).toBe('string');
+        else expect(leaf?.type, `${t.name}.${k}`).toBe('string');
+      }
+    }
   });
 
   it('spec/tools.json 与当前生成结果一致（改了 overrides 要重新 npm run build-spec）', () => {
