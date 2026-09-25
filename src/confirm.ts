@@ -70,6 +70,13 @@ export function withConfirm(tool: ToolDef, deps: ConfirmDeps) {
   return async (input: Record<string, unknown>, ctx: ServerContext): Promise<CallToolResult | InputRequiredResult> => {
     const { confirm_token, ...args } = input;
 
+    if (typeof confirm_token === 'string' && confirm_token) {
+      const state = deps.tokens.consume(confirm_token, tool.name, args);
+      if (state === 'mismatch') return text('确认码对应的参数与本次不同，已作废。请不带确认码重新调用，重新向用户确认。', true);
+      if (state !== 'ok') return text('确认码无效或已过期。请不带确认码重新调用，重新向用户确认。', true);
+      return deps.exec(args);
+    }
+
     if (deps.supportsElicitation(ctx)) {
       const answer = inputResponse(ctx.mcpReq.inputResponses, 'confirm');
       if (answer.kind === 'missing') {
@@ -87,19 +94,15 @@ export function withConfirm(tool: ToolDef, deps: ConfirmDeps) {
         });
       }
       if (answer.kind === 'elicit' && answer.action === 'accept' && answer.content?.confirm === true) return deps.exec(args);
-      return text('用户没有确认，操作已取消，没有请求后端。', true);
+      if (answer.kind === 'elicit' && answer.action === 'decline') return text('用户在弹窗里拒绝了，操作已取消，没有请求后端。', true);
+      // 有的客户端（如 Claude Code 的 VS Code 插件）声明能弹窗，却不显示就直接回了未确认，
+      // 这里一律拒绝会让写操作永远做不成；除明确拒绝外都退到确认码，让用户在对话里确认
     }
 
-    if (typeof confirm_token !== 'string' || !confirm_token) {
-      const token = deps.tokens.issue(tool.name, args);
-      return text(
-        `待确认，尚未执行。\n${preview(tool, args)}\n\n请把以上内容原样告诉用户；用户明确同意后，用相同参数加 confirm_token=${token} 再调用一次（5 分钟内有效，只能用一次）。用户不同意就不要再调。`,
-        false,
-      );
-    }
-    const state = deps.tokens.consume(confirm_token, tool.name, args);
-    if (state === 'mismatch') return text('确认码对应的参数与本次不同，已作废。请不带确认码重新调用，重新向用户确认。', true);
-    if (state !== 'ok') return text('确认码无效或已过期。请不带确认码重新调用，重新向用户确认。', true);
-    return deps.exec(args);
+    const token = deps.tokens.issue(tool.name, args);
+    return text(
+      `待确认，尚未执行。\n${preview(tool, args)}\n\n请把以上内容原样告诉用户；用户明确同意后，用相同参数加 confirm_token=${token} 再调用一次（5 分钟内有效，只能用一次）。用户不同意就不要再调。`,
+      false,
+    );
   };
 }

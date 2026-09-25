@@ -95,7 +95,7 @@ describe('stdio server', () => {
     const r1 = await c.callTool({ name: 'sub_account_list', arguments: { product_type_id: 1, page: 1, pagesize: 10 } });
     expect(r1.isError).toBeFalsy();
     expect(JSON.parse(textOf(r1))).toEqual({ code: 1, msg: 'ok', data: { echo: true } });
-    expect(hits[0]).toMatchObject({ method: 'GET', url: '/externalapi/device/accountList?product_type_id=1&page=1&pagesize=10', token: 'test-token' });
+    expect(hits[0]).toMatchObject({ method: 'GET', url: '/externalapi/device/accountList?product_type_id=1&page=1&pagesize=10&is_mcp_send=1', token: 'test-token' });
 
     await c.callTool({
       name: 'sub_account_set_credentials',
@@ -103,7 +103,7 @@ describe('stdio server', () => {
     });
     expect(hits[1].method).toBe('POST');
     expect(hits[1].url).toBe('/externalapi/device/batchUpdateSubAccountUsernamePassword');
-    expect(decodeURIComponent(hits[1].body)).toBe('product_type_id=1&content[0][id]=32&content[0][customUsername]=user0001&content[0][customPassword]=pass0001');
+    expect(decodeURIComponent(hits[1].body)).toBe('product_type_id=1&content[0][id]=32&content[0][customUsername]=user0001&content[0][customPassword]=pass0001&is_mcp_send=1');
     await c.close();
   }, 20_000);
 
@@ -163,7 +163,7 @@ describe('写操作确认', () => {
     expect(messages[0]).toContain('批量修改子账号备注（sub_account_update_batch）');
     expect(messages[0]).toContain('- product_type_id：1（动态住宅流量（不限时长））');
     expect(hits).toHaveLength(1);
-    expect(decodeURIComponent(hits[0].body)).toBe('product_type_id=1&ids=12,13&remark=测试');
+    expect(decodeURIComponent(hits[0].body)).toBe('product_type_id=1&ids=12,13&remark=测试&is_mcp_send=1');
     await c.close();
   }, 20_000);
 
@@ -201,7 +201,7 @@ describe('写操作确认', () => {
     const done = await c.callTool({ ...WRITE, arguments: { ...WRITE.arguments, confirm_token: token } });
     expect(done.isError).toBeFalsy();
     expect(hits).toHaveLength(1);
-    expect(decodeURIComponent(hits[0].body)).toBe('product_type_id=1&ids=12,13&remark=测试');
+    expect(decodeURIComponent(hits[0].body)).toBe('product_type_id=1&ids=12,13&remark=测试&is_mcp_send=1');
 
     const reused = await c.callTool({ ...WRITE, arguments: { ...WRITE.arguments, confirm_token: token } });
     expect(reused.isError).toBe(true);

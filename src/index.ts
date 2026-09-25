@@ -56,7 +56,7 @@ const INSTRUCTIONS = `全球代理（quanqiudaili.com）externalapi 的 MCP 封�
 - 子账号 id 一律取 sub_account_list 返回的 id 字段，按字符串传（如 "77"）；要传多个时按参数说明用数组或英文逗号连接；要按订单操作时看该列表每条的 order_product_buy_id。
 - 国家一律用 ISO 3166-1 二字码（如 US）；分页参数 pagesize 最大 100。
 - 下单、续费、带宽升级、删除类工具会从余额扣费或不可恢复：调用前先用 stock_check、product_unit_price、bandwidth_upgrade_price、user_info 查清库存、价格和余额，把参数与预计费用告诉用户并取得明确确认。
-- 写操作工具执行前必须经用户确认：支持弹窗的客户端会弹出操作预览让用户点选；不支持的客户端会先返回预览和 confirm_token，要把预览原样转述给用户，得到明确同意后再带 confirm_token 用相同参数调用。不要替用户做决定，用户没回答就不要带确认码重试。
+- 写操作工具执行前必须经用户确认：支持弹窗的客户端会弹出操作预览让用户点选；没弹窗或不支持的客户端会返回预览和 confirm_token，要把预览原样转述给用户，得到明确同意后再带 confirm_token 用相同参数调用。不要替用户做决定，用户没回答就不要带确认码重试。
 - 工具成功时返回 {code, msg, data} 的 JSON；失败时 isError 为 true，文本就是后端给出的原因。若提示 token 无效，请用户到网站 API Keys 页面核对或重新生成 API Key，并更新 QQDL_TOKEN。
 - 动态住宅代理连接串的写法（cty/st/ct/ss/tm/spec 参数）见资源 ${SESSION_URI}。`;
 

@@ -48,9 +48,10 @@ export async function callApi(
   cfg: Cfg,
   fetchImpl: typeof fetch = fetch,
 ): Promise<CallToolResult> {
-  const form = toForm({ ...args, ...tool.fixed }).toString();
+  // is_mcp_send 与 UA 让后端能区分 MCP 发出的请求
+  const form = toForm({ ...args, ...tool.fixed, is_mcp_send: 1 }).toString();
   const url = new URL(cfg.baseUrl + tool.path);
-  const headers: Record<string, string> = { token: cfg.token, accept: 'application/json' };
+  const headers: Record<string, string> = { token: cfg.token, accept: 'application/json', 'user-agent': 'quanqiudaili mcp' };
   const init: RequestInit = { method: tool.method, headers, signal: AbortSignal.timeout(cfg.timeoutMs) };
   if (tool.method === 'GET') {
     url.search = form;

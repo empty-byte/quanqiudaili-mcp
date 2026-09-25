@@ -34,12 +34,13 @@ describe('cfgFromEnv', () => {
 });
 
 describe('callApi', () => {
-  it('GET 把参数放 query、token 放 header，code=1 返回 {code,msg,data}', async () => {
+  it('GET 把参数放 query 并附 is_mcp_send=1，token 与 UA 放 header，code=1 返回 {code,msg,data}', async () => {
     const seen: Seen = {};
     const r = await callApi(tool(), { page: 1 }, cfg,
       stub(200, JSON.stringify({ code: 1, msg: 'ok', time: '1', data: { balance: 9 } }), seen));
-    expect(seen.url).toBe('https://example.test/externalapi/user/getUserInfo?page=1');
+    expect(seen.url).toBe('https://example.test/externalapi/user/getUserInfo?page=1&is_mcp_send=1');
     expect((seen.init?.headers as Record<string, string>).token).toBe('tk');
+    expect((seen.init?.headers as Record<string, string>)['user-agent']).toBe('quanqiudaili mcp');
     expect(r.isError).toBeUndefined();
     expect(JSON.parse(textOf(r))).toEqual({ code: 1, msg: 'ok', data: { balance: 9 } });
   });
@@ -52,13 +53,13 @@ describe('callApi', () => {
     expect(JSON.parse(textOf(r2))).toEqual({ code: 1, msg: 'ok', data: null });
   });
 
-  it('POST 用表单编码并附加 fixed 参数', async () => {
+  it('POST 用表单编码，附加 fixed 参数和 is_mcp_send=1', async () => {
     const seen: Seen = {};
     await callApi(tool({ method: 'POST', fixed: { pay_method: 'balance' } }), { page: 2 }, cfg,
       stub(200, '{"code":1,"msg":"","data":null}', seen));
     expect(seen.init?.method).toBe('POST');
     expect((seen.init?.headers as Record<string, string>)['content-type']).toBe('application/x-www-form-urlencoded');
-    expect(seen.init?.body).toBe('page=2&pay_method=balance');
+    expect(seen.init?.body).toBe('page=2&pay_method=balance&is_mcp_send=1');
     expect(seen.url).toBe('https://example.test/externalapi/user/getUserInfo');
   });
 
