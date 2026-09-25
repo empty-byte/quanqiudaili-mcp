@@ -1,44 +1,45 @@
 # quanqiudaili-mcp
 
-全球代理（quanqiudaili.com）对外 API 的 MCP 服务器。让 Claude Code、Claude Desktop 等 MCP 客户端可以查询子账号、库存、价格，并在你确认后下单、续费、改配置。
+全球代理（quanqiudaili.com）开放接口的 MCP 服务器。接入 Claude Code、Claude Desktop、Cursor、Codex 等支持 MCP 的 AI 客户端后，可以用自然语言查询子账号、库存、价格与余额，并在确认后完成下单、续费与子账号管理。
 
-默认暴露全部 34 个工具，含下单扣费、续费、删除子账号；加 `--readonly` 只暴露 20 个只读工具，装了不会产生任何费用。新建、修改、下单、续费、删除这 14 个写操作执行前都会先向你确认（见下文"写操作确认"），AI 替不了你点；不需要写操作的人直接配 `--readonly`。
+- 只读模式 `--readonly` 仅暴露 20 个查询工具，不会产生任何费用。
+- 下单、续费、删除等 14 个写操作执行前都需要用户确认，AI 无法代替用户确认。
+- 参数按接口文档生成并在本地校验，不合法的参数不会发送到后端。
 
-业务逻辑、参数校验、鉴权、扣费全部在后端完成，本项目只是一个 HTTP 客户端。
+业务逻辑、鉴权与扣费均由后端完成，本项目只是一个 HTTP 客户端。
 
 ## 环境要求
 
-Node.js 20 或更新（推荐当前 LTS），Windows、macOS、Linux 均可。用方式一（npx）还要求本机装有 `git` 并能访问 GitHub。
+- Node.js 20 或更新版本，Windows、macOS、Linux 均可。
+- 使用 npx 方式接入时，本机需安装 `git` 并能访问 GitHub。
 
-## 第一步：拿到 token
+## 快速开始
 
-token 就是网站的 API Key，永久有效，每个账号最多 20 个：
+### 1. 获取 API Key
 
-1. 登录 quanqiudaili.com，点右上角头像，进 API Keys。
-2. 新建一个 Key，复制形如 `sk-…` 的完整字符串，下面写配置时填进 `QQDL_TOKEN`。
+登录 quanqiudaili.com，点击右上角头像进入 API Keys，新建一个 Key 并复制完整字符串（形如 `sk-…`）。Key 永久有效，每个账号最多 20 个，等同于账号权限，请勿泄露或写入代码。
 
-Key 被删除或复制不完整时，工具会返回"token 无效"，到 API Keys 页面核对或重新生成后更新配置即可。Key 等同于账号权限，不要分享给他人或写进客户端代码。
+### 2. 接入客户端
 
-## 第二步：接入客户端，两种方式二选一
+两种方式任选其一。
 
-### 方式一：npx，不用下载安装（推荐）
+**方式一：npx，无需安装（推荐）**
 
-客户端配置里把启动命令写成 `npx -y github:empty-byte/quanqiudaili-mcp`。客户端第一次拉起时自动从 GitHub 取源码、装依赖、编译并缓存，之后直接复用；第一次会慢一两分钟。
+在客户端配置中把启动命令写成 `npx -y github:empty-byte/quanqiudaili-mcp`。首次拉起时会自动下载、编译并缓存，耗时一到两分钟，之后直接复用。
 
-把所有客户端的配置片段打印出来，贴进你用的那个（只打印，不改任何文件）：
-
-```bash
-npx -y github:empty-byte/quanqiudaili-mcp setup --npx --token 你的token
-npx -y github:empty-byte/quanqiudaili-mcp setup --npx --token 你的token --readonly   # 只读版
-```
-
-也可以直接照抄下面两个最常用的。Claude Code，一条命令：
+打印所有客户端的配置片段（只输出文本，不修改任何文件）：
 
 ```bash
-claude mcp add -s user -e QQDL_TOKEN=你的token quanqiudaili -- npx -y github:empty-byte/quanqiudaili-mcp
+npx -y github:empty-byte/quanqiudaili-mcp setup --npx --token <API Key>
 ```
 
-Claude Desktop，写进 `claude_desktop_config.json`（Windows 在 `%APPDATA%\Claude\`，macOS 在 `~/Library/Application Support/Claude/`）：
+Claude Code：
+
+```bash
+claude mcp add -s user -e QQDL_TOKEN=<API Key> quanqiudaili -- npx -y github:empty-byte/quanqiudaili-mcp
+```
+
+Claude Desktop，写入 `claude_desktop_config.json`（Windows：`%APPDATA%\Claude\`；macOS：`~/Library/Application Support/Claude/`）：
 
 ```json
 {
@@ -46,15 +47,15 @@ Claude Desktop，写进 `claude_desktop_config.json`（Windows 在 `%APPDATA%\Cl
     "quanqiudaili": {
       "command": "npx",
       "args": ["-y", "github:empty-byte/quanqiudaili-mcp"],
-      "env": { "QQDL_TOKEN": "你的token" }
+      "env": { "QQDL_TOKEN": "<API Key>" }
     }
   }
 }
 ```
 
-Windows 下若客户端报找不到 npx，把 `command` 改成 `cmd`，`args` 最前面加 `"/c", "npx"`。
+Windows 下若客户端提示找不到 `npx`，将 `command` 改为 `cmd`，并在 `args` 最前面加入 `"/c", "npx"`。
 
-### 方式二：克隆到本机
+**方式二：本地安装**
 
 ```bash
 git clone https://github.com/empty-byte/quanqiudaili-mcp.git
@@ -62,17 +63,16 @@ cd quanqiudaili-mcp
 npm ci
 ```
 
-`npm ci` 结束时会自动编译到 `dist/`，启动命令是 `node <安装目录>/dist/src/index.js`。打印配置片段：
+`npm ci` 会自动编译到 `dist/`。启动命令为 `node <安装目录>/dist/src/index.js`，打印配置片段：
 
 ```bash
-node <安装目录>/dist/src/index.js setup --token 你的token
-node <安装目录>/dist/src/index.js setup --token 你的token --readonly   # 只读版
+node <安装目录>/dist/src/index.js setup --token <API Key>
 ```
 
-Claude Code（`<安装目录>` 换成实际绝对路径，Windows 也用正斜杠，例如 `C:/tools/quanqiudaili-mcp`）：
+Claude Code（`<安装目录>` 为绝对路径，Windows 也使用正斜杠，如 `C:/tools/quanqiudaili-mcp`）：
 
 ```bash
-claude mcp add -s user -e QQDL_TOKEN=你的token quanqiudaili -- node <安装目录>/dist/src/index.js
+claude mcp add -s user -e QQDL_TOKEN=<API Key> quanqiudaili -- node <安装目录>/dist/src/index.js
 ```
 
 Claude Desktop：
@@ -83,113 +83,109 @@ Claude Desktop：
     "quanqiudaili": {
       "command": "node",
       "args": ["<安装目录>/dist/src/index.js"],
-      "env": { "QQDL_TOKEN": "你的token" }
+      "env": { "QQDL_TOKEN": "<API Key>" }
     }
   }
 }
 ```
 
-以后更新：进目录 `git pull && npm ci`。也可以 `npm install -g .` 得到全局命令 `quanqiudaili-mcp`。
+更新：在安装目录执行 `git pull && npm ci`。
 
-### 两种方式都适用
+### 3. 验证
 
-- `setup` 的输出按客户端分段：Claude Code 与 Codex CLI 各一条可直接执行的命令，Claude Desktop、Cursor、Windsurf/Devin、VS Code、Zed 各给配置文件位置和 JSON 或 TOML 片段，最后一段是任何支持 stdio 的客户端都能用的标准 `mcpServers` JSON。
-- 启动参数：不带参数是全部 34 个工具；`--readonly` 只暴露 20 个只读工具，写在 `args` 末尾；`--yes` 跳过写操作确认，只给自动化脚本用。
-- token 必须写在客户端配置的 `env` 里（或 `claude mcp add -e`）。服务是被客户端当子进程拉起的，你在终端里 `export` 或 `$env:` 设置的变量传不进去。
-- 改完配置重启客户端。验证：让助手回答"我的余额是多少"，它会调用 user_balance 返回金额；Claude Code 里 `/mcp` 能看到 quanqiudaili 的连接状态。
+重启客户端后，向 AI 提问"我的账户余额是多少"，能返回金额即接入成功。Claude Code 中可用 `/mcp` 查看连接状态。
+
+## 配置
+
+`setup` 子命令的输出按客户端分段，包含 Claude Code、Codex CLI、Claude Desktop、Cursor、Windsurf、VS Code、Zed 的配置，以及适用于任何 stdio 客户端的标准 `mcpServers` JSON。加 `--readonly` 可生成只读版配置。
+
+启动参数：
+
+| 参数 | 说明 |
+|---|---|
+| 无 | 暴露全部 34 个工具 |
+| `--readonly` | 仅暴露 20 个只读工具 |
+| `--yes` | 写操作不再确认，仅供自动化脚本使用 |
 
 环境变量：
 
 | 变量 | 必填 | 默认值 | 说明 |
 |---|---|---|---|
-| `QQDL_TOKEN` | 是 | 无 | 网站 API Keys 页面生成的 API Key |
-| `QQDL_BASE_URL` | 否 | `https://admin.quanqiudaili.com` | 指向测试环境时修改 |
+| `QQDL_TOKEN` | 是 | 无 | API Key |
+| `QQDL_BASE_URL` | 否 | `https://admin.quanqiudaili.com` | 接口地址 |
 | `QQDL_TIMEOUT_MS` | 否 | `30000` | 单次请求超时（毫秒） |
-| `QQDL_CONFIRM_QUIET_MS` | 否 | `10000` | 确认码发出后多久才能用（毫秒），见下文"写操作确认" |
+| `QQDL_CONFIRM_QUIET_MS` | 否 | `10000` | 确认码生效前的静默期（毫秒） |
+
+环境变量必须写在客户端配置的 `env` 中。服务由客户端作为子进程拉起，不会继承终端中设置的变量。API Key 失效时工具会返回"token 无效"，在网站重新生成并更新配置即可。
 
 ## 写操作确认
 
-新建、修改、下单、续费、升级、退单、删除这 14 个工具执行前都会先向你确认：
+写操作工具在执行前会先向用户确认：
 
-- 客户端支持 MCP 的弹窗确认（elicitation）时，会弹出操作预览（工具、参数、产品名），你点确认后才请求后端。Inspector、VS Code 支持；其它客户端以实际是否弹窗为准。弹窗没得到确认（你点了拒绝或关掉，或者客户端声明支持却没显示弹窗，Claude Code 的 VS Code 插件目前就这样）都会退到下面的确认码方式，由助手在对话里再向你确认一次，你不同意就不执行。
-- 客户端不支持时，第一次调用只返回预览和一个 5 分钟有效、只能用一次的确认码，AI 要把预览告诉你，你同意后它再带确认码用同样参数调一次。这一路靠 AI 转述，弱于弹窗。
-- 确认码发出后 10 秒内不能用，提前用一次生效时间就顺延一次：AI 拿到确认码不问你就直接重调，间隔只有几秒，会被拒并被要求先问你；你看完预览再回复至少也要十来秒，正常不受影响。每一次操作都单独确认，同样的操作再做一次也会再问。间隔可用 `QQDL_CONFIRM_QUIET_MS` 调整。
-- 这层确认与客户端自带的工具权限弹窗是叠加的，可能问两次。
-- 自动化脚本不想被打断，启动参数加 `--yes`，写操作直接执行。`--readonly` 模式没有写工具，不涉及确认。
-
-## 调试
-
-不接客户端、想直接看工具列表或手动调一个工具，用官方 Inspector，token 同样要通过它的 `-e` 传入：
-
-```bash
-npx @modelcontextprotocol/inspector -e QQDL_TOKEN=你的token -- node <安装目录>/dist/src/index.js
-```
-
-浏览器里点 Connect，Tools 页能看到全部工具、填参数、看返回。调写操作工具时会弹出确认表单，点同意才真正发请求；用它也能最快看出某个客户端走的是弹窗还是确认码。
+- 客户端支持 MCP 弹窗确认（elicitation）时，弹出操作预览，用户确认后才请求后端。
+- 客户端不支持弹窗，或弹窗未获确认时，工具只返回操作预览和一个一次性确认码，由 AI 转述给用户；用户同意后，AI 需携带确认码以相同参数再次调用。确认码 5 分钟内有效，发出后 10 秒内不能使用，提前使用会被拒绝并顺延生效时间，用于阻止 AI 未经用户同意自行重试。
+- 每次操作均需单独确认，参数变化或再次执行同样的操作都会重新确认。
+- 该确认与客户端自身的工具权限提示相互独立，可能出现两次询问。
 
 ## 工具清单
 
-产品类型 `product_type_id`：1 动态住宅流量（不限时长）、6 动态住宅流量（包月）、2 静态住宅（普通）、3 静态住宅（原生）、4 静态住宅（运营商原生）、8 数据中心。国家一律用 ISO 3166-1 二字码（如 `US`）。
+产品类型 `product_type_id`：1 动态住宅流量（不限时长）、6 动态住宅流量（包月）、2 静态住宅（普通）、3 静态住宅（原生）、4 静态住宅（运营商原生）、8 数据中心。国家使用 ISO 3166-1 二字码，如 `US`。
 
-只读（`--readonly` 模式暴露的全部工具）：
+只读工具（`--readonly` 模式暴露的全部工具）：
 
 | 工具 | 说明 |
 |---|---|
-| user_info | 账号信息与余额 |
-| user_balance | 账户余额，data 直接是金额 |
-| product_unit_price | 各产品单价、折扣、按国家自定义价 |
-| product_list | 产品信息 |
-| dynamic_country_list / dynamic_state_list / dynamic_city_list | 动态产品 1、6 的国家、州、城市 |
-| static_country_list / static_city_list | 时长产品 2、3、4、8 的国家、城市 |
+| user_info | 账号信息 |
+| user_balance | 账户余额 |
+| product_list | 产品列表 |
+| product_unit_price | 各产品单价、折扣与按国家的自定义价 |
+| dynamic_country_list / dynamic_state_list / dynamic_city_list | 动态产品（1、6）的国家、州、城市 |
+| static_country_list / static_city_list | 时长产品（2、3、4、8）的国家、城市 |
 | static_region_stock | 时长产品地区库存 |
 | static_ip_range_list | 时长产品 IP 段 |
-| stock_check | 下单前库存检测，不扣费 |
+| stock_check | 下单前库存检测 |
 | sub_account_list | 子账号列表，覆盖全部产品 |
 | sub_account_flow_query | 动态子账号月度流量 |
 | sub_account_limit_flow | 子账号流量上限与已用量 |
 | bandwidth_package_list / bandwidth_monitoring_list / bandwidth_trend / bandwidth_detail | 带宽套餐、监控、趋势、详情 |
-| bandwidth_upgrade_price | 带宽升级价格试算，不扣费 |
+| bandwidth_upgrade_price | 带宽升级价格试算 |
 
-写操作（默认模式才有，`--readonly` 不暴露）：
+写操作工具（默认模式暴露）：
 
 | 工具 | 说明 |
 |---|---|
 | sub_account_add | 新增动态子账号 |
-| sub_account_update / sub_account_update_batch | 修改备注 |
-| sub_account_set_credentials | 自定义子账号账密 |
+| sub_account_update / sub_account_update_batch | 修改子账号备注 |
+| sub_account_set_credentials | 设置子账号自定义账密 |
 | sub_account_toggle_direct | 批量开关直连 |
 | sub_account_set_limit_flow | 设置流量上限 |
 | sub_account_delete / sub_account_delete_batch | 删除子账号，不可恢复 |
 | order_buy_dynamic | 购买动态住宅流量（产品 1、6），扣费 |
 | order_buy_time_ip | 购买时长 IP（产品 2、3、4、8），扣费 |
 | order_buy_test_ip | 购买时长测试 IP，扣费 |
-| order_renew | 续费时长 IP，扣费；不改子账号的自动续费开关，不传 renew_with_bandwidth 时沿用当前设置 |
+| order_renew | 续费时长 IP，扣费；不改变子账号的自动续费设置 |
 | order_bandwidth_upgrade | 带宽升级下单，余额支付 |
 | order_refund_apply | 申请退单 |
 
-资源 `quanqiudaili://docs/dynamic-proxy-session`：动态住宅代理连接串的参数写法与示例。
+资源 `quanqiudaili://docs/dynamic-proxy-session`：动态住宅代理连接串的参数说明与示例。
 
-工具的参数、类型与必填项由文档站生成，调用时 SDK 会先按 JSON Schema 校验，不符合的参数直接返回错误，不会打到后端。
+## 调试
 
-## 跟随文档站更新
-
-工具定义由 <https://develop.quanqiudaili.com/llms.txt> 生成，不手写：
+使用官方 Inspector 直接查看工具列表或手动调用，API Key 通过 `-e` 传入：
 
 ```bash
-npm run sync-docs   # 下载全部接口页到 spec/pages/，重新生成 spec/tools.json，打印与上一版的差异
-npm test            # 若快照变化且差异合理：npx vitest run -u 更新快照
+npx @modelcontextprotocol/inspector -e QQDL_TOKEN=<API Key> -- node <安装目录>/dist/src/index.js
 ```
 
-新增接口会让生成失败并列出路径，把它加进 `spec/overrides.yaml`（或 `ignore`）再跑一次。工具名、中文描述、标注与文档缺陷的修正都在 `spec/overrides.yaml`。
-
-## 开发
+## 开发与维护
 
 ```bash
-npm test               # 构建 + 全部测试（不联网，端到端测试用本地假后端）
-npm run build-spec     # 只用本地 spec/pages 重新生成 tools.json（不联网）
+npm test             # 构建并运行全部测试，不联网
+npm run sync-docs    # 从文档站重新生成工具定义，并打印与上一版的差异
+npm run build-spec   # 仅用本地已下载的文档页重新生成工具定义
 ```
 
-涉及在后端创建数据的操作（新增子账号、下单、续费等）不做自动化联调，由维护者用测试账号手动验证。设计与实施文档见 `docs/`。
+工具定义由 <https://develop.quanqiudaili.com/llms.txt> 生成，不手写；工具名、描述与文档修正维护在 `spec/overrides.yaml`。涉及在后端创建数据的操作不做自动化联调，由维护者用测试账号手动验证。设计与实施文档见 `docs/`。
 
 ## 许可
 
